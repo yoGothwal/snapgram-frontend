@@ -59,7 +59,7 @@ function App() {
     const coords = { lat: 28.61, lng: 77.23 };
 
     const res = await axios.post(
-      "http://localhost:5000/api/users/register",
+      `${baseURL}/api/users/register`,
       {
         name: profile.displayName,
         bio: "Using SnapGram 😎",
@@ -76,7 +76,7 @@ function App() {
 
   const fetchNearby = async () => {
     const res = await axios.get(
-      `http://localhost:5000/api/users/nearby?lat=28.61&lng=77.23&radius=10`,
+      `${baseURL}/api/users/nearby?lat=28.61&lng=77.23&radius=10`,
       {
         headers: { Authorization: `Bearer ${user.token}` },
       }
