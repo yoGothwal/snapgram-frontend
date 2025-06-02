@@ -5,10 +5,12 @@ import {
   Route,
   Link,
   Navigate,
+  useNavigate,
 } from "react-router-dom";
 import { auth, provider, signInWithPopup } from "./firebase";
 import axios from "axios";
 const baseURL = import.meta.env.VITE_API_URL || "/api";
+
 function Explore() {
   return <h2>Explore Page</h2>;
 }
@@ -29,15 +31,17 @@ function FindPeople({ fetchNearby, nearby }) {
 }
 
 function Profile({ user }) {
+  console.log(user);
   return (
     <div>
       <h2>Profile</h2>
       {user && (
         <>
           <img
-            src={user.profilePic || user.profilePicture}
+            src={user.profilePicture}
             alt="Profile"
             width={80}
+            referrerPolicy="no-referrer"
           />
           <p>Name: {user.name}</p>
           <p>Bio: {user.bio}</p>
@@ -47,17 +51,20 @@ function Profile({ user }) {
   );
 }
 
-function App() {
+function AppContent() {
   const [user, setUser] = useState(null);
   const [nearby, setNearby] = useState([]);
+  const navigate = useNavigate();
 
   const signIn = async () => {
     const result = await signInWithPopup(auth, provider);
     const token = await result.user.getIdToken();
     const profile = result.user;
-
+    console.log("profile ", profile, profile.photoURL);
     const coords = { lat: 28.61, lng: 77.23 };
-
+    const profilePicture =
+      profile.photoURL || "https://via.placeholder.com/150";
+    console.log("profilePicture ", profilePicture);
     const res = await axios.post(
       `${baseURL}/api/users/register`,
       {
@@ -65,13 +72,15 @@ function App() {
         bio: "Using SnapGram 😎",
         lat: coords.lat,
         lng: coords.lng,
-        profilePic: profile.photoURL,
+        profilePicture: profilePicture,
       },
       {
         headers: { Authorization: `Bearer ${token}` },
       }
     );
-    setUser({ ...res.data, token, profilePic: profile.photoURL });
+    console.log("User registered:", res.data);
+    setUser({ ...res.data, token });
+    navigate("/profile"); // Navigate after sign in
   };
 
   const fetchNearby = async () => {
@@ -93,7 +102,7 @@ function App() {
   }
 
   return (
-    <Router>
+    <>
       {/* Navigation Bar */}
       <nav
         style={{
@@ -117,6 +126,14 @@ function App() {
         />
         <Route path="/profile" element={<Profile user={user} />} />
       </Routes>
+    </>
+  );
+}
+
+function App() {
+  return (
+    <Router>
+      <AppContent />
     </Router>
   );
 }
