@@ -8,7 +8,7 @@ import {
 } from "react-router-dom";
 import { auth, provider, signInWithPopup } from "./firebase";
 import axios from "axios";
-
+const baseURL = import.meta.env.VITE_API_URL || "/api";
 function Explore() {
   return <h2>Explore Page</h2>;
 }
