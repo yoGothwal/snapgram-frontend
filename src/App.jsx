@@ -11,14 +11,11 @@ import Navbar from "./components/NavBar";
 import Logo from "./components/Logo";
 
 import Profile from "./pages/Profile";
+import Explore from "./pages/Explore";
 
 import { auth, provider, signInWithPopup } from "./firebase";
 import axios from "axios";
 const baseURL = import.meta.env.VITE_API_URL || "/api";
-
-function Explore() {
-  return <h2>Explore Page</h2>;
-}
 
 function FindPeople({ fetchNearby, nearby }) {
   return (
@@ -91,7 +88,7 @@ function AppContent() {
           //console.log("User registered:", res.data);
           setUser({ ...res.data, token, coords });
           getPlaceName(coords.lat, coords.lng);
-          navigate("/profile");
+          navigate("/explore");
         },
         (error) => {
           console.error("Geolocation error:", error);
@@ -130,7 +127,7 @@ function AppContent() {
   return (
     <>
       <Logo></Logo>
-      <Navbar />
+      <Navbar setUser={setUser} />
       <Routes>
         <Route path="/" element={<Navigate to="/explore" />} />
         <Route path="/explore" element={<Explore />} />
@@ -140,7 +137,7 @@ function AppContent() {
         />
         <Route
           path="/profile"
-          element={<Profile user={user} place={place} />}
+          element={<Profile user={user} setUser={setUser} place={place} />}
         />
       </Routes>
     </>

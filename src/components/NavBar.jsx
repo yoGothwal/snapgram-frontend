@@ -3,7 +3,12 @@ import SearchIcon from "@mui/icons-material/Search";
 import ProfileIcon from "@mui/icons-material/Person";
 import ExploreIcon from "@mui/icons-material/Explore";
 
+import IconButton from "@mui/material/IconButton";
+
 import { useNavigate } from "react-router-dom";
+
+import { NoBgSx } from "../sx/styles";
+
 function NavBar() {
   const navigate = useNavigate();
   return (
@@ -27,48 +32,34 @@ function NavBar() {
             alignItems: "center",
             alignContent: "center",
             gap: 10,
-            px: "50px",
+            px: "20px",
             justifyContent: "center",
             border: "1px solid #232526",
             borderRadius: 5,
           }}
         >
-          <Box
+          <IconButton
+            sx={NoBgSx}
             onClick={() => navigate("/explore")}
-            sx={{ cursor: "pointer", mt: 1 }}
+            disableRipple
           >
-            <ExploreIcon
-              sx={{
-                color: "#232526",
-                fontSize: 30,
-                cursor: "pointer",
-              }}
-            ></ExploreIcon>
-          </Box>
-          <Box
+            <ExploreIcon sx={{ color: "#232526", fontSize: 30 }} />
+          </IconButton>
+
+          <IconButton
+            sx={NoBgSx}
             onClick={() => navigate("/find-people")}
-            sx={{ cursor: "pointer", mt: 1 }}
+            disableRipple
           >
-            <SearchIcon
-              sx={{
-                color: "#232526",
-                fontSize: 30,
-                cursor: "pointer",
-              }}
-            ></SearchIcon>
-          </Box>
-          <Box
+            <SearchIcon sx={{ color: "#232526", fontSize: 30 }} />
+          </IconButton>
+          <IconButton
+            sx={NoBgSx}
             onClick={() => navigate("/profile")}
-            sx={{ cursor: "pointer", mt: 1 }}
+            disableRipple
           >
-            <ProfileIcon
-              sx={{
-                color: "#232526",
-                fontSize: 30,
-                cursor: "pointer",
-              }}
-            ></ProfileIcon>
-          </Box>
+            <ProfileIcon sx={{ color: "#232526", fontSize: 30 }} />
+          </IconButton>
         </Box>
       </Box>
     </>
