@@ -124,7 +124,7 @@ function AppContent() {
     }
     const { lat, lng } = user.coords;
     const res = await axios.get(
-      `${baseURL}/api/users/nearby?lat=${25.0949128}&lng=${76.5237134}&radius=10`,
+      `${baseURL}/api/users/nearby?lat=${lat}&lng=${lng}&radius=10`,
       {
         headers: { Authorization: `Bearer ${user.token}` },
       }
