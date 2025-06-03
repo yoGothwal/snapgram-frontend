@@ -30,7 +30,7 @@ function FindPeople({ fetchNearby, nearby }) {
   );
 }
 
-function Profile({ user }) {
+function Profile({ user, place }) {
   console.log("user", user);
   return (
     <div>
@@ -49,6 +49,7 @@ function Profile({ user }) {
           <p>
             Location Coords: {user.coords.lng},{user.coords.lat},
           </p>
+          <p>Place: {place}</p>
         </>
       )}
     </div>
@@ -58,6 +59,18 @@ function Profile({ user }) {
 function AppContent() {
   const [user, setUser] = useState(null);
   const [nearby, setNearby] = useState([]);
+  const [place, setPlace] = useState("");
+  const getPlaceName = async (lat, lng) => {
+    try {
+      const res = await fetch(
+        `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lng}`
+      );
+      const data = await res.json();
+      setPlace(data.display_name || "Unknown location");
+    } catch (e) {
+      setPlace("Unknown location");
+    }
+  };
   const navigate = useNavigate();
 
   const signIn = async () => {
@@ -90,6 +103,7 @@ function AppContent() {
           );
           //console.log("User registered:", res.data);
           setUser({ ...res.data, token, coords });
+          getPlaceName(coords.lat, coords.lng);
           navigate("/profile");
         },
         (error) => {
@@ -149,7 +163,10 @@ function AppContent() {
           path="/findpeople"
           element={<FindPeople fetchNearby={fetchNearby} nearby={nearby} />}
         />
-        <Route path="/profile" element={<Profile user={user} />} />
+        <Route
+          path="/profile"
+          element={<Profile user={user} place={place} />}
+        />
       </Routes>
     </>
   );
