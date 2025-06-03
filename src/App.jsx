@@ -1,12 +1,17 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   BrowserRouter as Router,
   Routes,
   Route,
-  Link,
   Navigate,
   useNavigate,
 } from "react-router-dom";
+
+import Navbar from "./components/NavBar";
+import Logo from "./components/Logo";
+
+import Profile from "./pages/Profile";
+
 import { auth, provider, signInWithPopup } from "./firebase";
 import axios from "axios";
 const baseURL = import.meta.env.VITE_API_URL || "/api";
@@ -30,36 +35,18 @@ function FindPeople({ fetchNearby, nearby }) {
   );
 }
 
-function Profile({ user, place }) {
-  console.log("user", user);
-  return (
-    <div>
-      <h2>Profile</h2>
-      {user && (
-        <>
-          <img
-            src={user.profilePicture}
-            alt="Profile"
-            width={80}
-            referrerPolicy="no-referrer"
-          />
-          <p>Name: {user.name}</p>
-          <p>Bio: {user.bio}</p>
-          <p>Username: {user.username}</p>
-          <p>
-            Location Coords: {user.coords.lng},{user.coords.lat},
-          </p>
-          <p>Place: {place}</p>
-        </>
-      )}
-    </div>
-  );
-}
-
 function AppContent() {
-  const [user, setUser] = useState(null);
+  const [user, setUser] = useState(() => {
+    const saved = localStorage.getItem("snapgram_user");
+    return saved ? JSON.parse(saved) : null;
+  });
   const [nearby, setNearby] = useState([]);
   const [place, setPlace] = useState("");
+  useEffect(() => {
+    if (user) {
+      localStorage.setItem("snapgram_user", JSON.stringify(user));
+    }
+  }, [user]);
   const getPlaceName = async (lat, lng) => {
     try {
       const res = await fetch(
@@ -142,25 +129,13 @@ function AppContent() {
 
   return (
     <>
-      {/* Navigation Bar */}
-      <nav
-        style={{
-          display: "flex",
-          gap: "1rem",
-          padding: "1rem",
-          borderBottom: "1px solid #ccc",
-        }}
-      >
-        <Link to="/explore">Explore</Link>
-        <Link to="/findpeople">Find People Nearby</Link>
-        <Link to="/profile">Profile</Link>
-      </nav>
-      {/* Main Content */}
+      <Logo></Logo>
+      <Navbar />
       <Routes>
         <Route path="/" element={<Navigate to="/explore" />} />
         <Route path="/explore" element={<Explore />} />
         <Route
-          path="/findpeople"
+          path="/find-people"
           element={<FindPeople fetchNearby={fetchNearby} nearby={nearby} />}
         />
         <Route
