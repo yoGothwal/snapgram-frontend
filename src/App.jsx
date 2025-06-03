@@ -31,7 +31,7 @@ function FindPeople({ fetchNearby, nearby }) {
 }
 
 function Profile({ user }) {
-  console.log(user);
+  console.log("user", user);
   return (
     <div>
       <h2>Profile</h2>
@@ -45,6 +45,10 @@ function Profile({ user }) {
           />
           <p>Name: {user.name}</p>
           <p>Bio: {user.bio}</p>
+          <p>Username: {user.username}</p>
+          <p>
+            Location Coords: {user.coords.lng},{user.coords.lat},
+          </p>
         </>
       )}
     </div>
@@ -57,35 +61,56 @@ function AppContent() {
   const navigate = useNavigate();
 
   const signIn = async () => {
-    const result = await signInWithPopup(auth, provider);
-    const token = await result.user.getIdToken();
-    const profile = result.user;
-    console.log("profile ", profile, profile.photoURL);
-    const coords = { lat: 28.61, lng: 77.23 };
-    const profilePicture =
-      profile.photoURL || "https://via.placeholder.com/150";
-    console.log("profilePicture ", profilePicture);
-    const res = await axios.post(
-      `${baseURL}/api/users/register`,
-      {
-        name: profile.displayName,
-        bio: "Using SnapGram 😎",
-        lat: coords.lat,
-        lng: coords.lng,
-        profilePicture: profilePicture,
-      },
-      {
-        headers: { Authorization: `Bearer ${token}` },
-      }
-    );
-    console.log("User registered:", res.data);
-    setUser({ ...res.data, token });
-    navigate("/profile"); // Navigate after sign in
+    try {
+      const result = await signInWithPopup(auth, provider);
+      const profile = result.user;
+      const token = await profile.getIdToken();
+      //console.log("profile ", profile);
+      navigator.geolocation.getCurrentPosition(
+        async (position) => {
+          const coords = {
+            lat: position.coords.latitude,
+            lng: position.coords.longitude,
+          };
+          console.log("User's location: [lat, lng]: ", coords);
+          const profilePicture =
+            profile.photoURL || "https://via.placeholder.com/150";
+          const res = await axios.post(
+            `${baseURL}/api/users/register`,
+            {
+              name: profile.displayName,
+              bio: "Using SnapGram 😎",
+              lat: coords.lat,
+              lng: coords.lng,
+              profilePicture: profilePicture,
+            },
+            {
+              headers: { Authorization: `Bearer ${token}` },
+            }
+          );
+          //console.log("User registered:", res.data);
+          setUser({ ...res.data, token, coords });
+          navigate("/profile");
+        },
+        (error) => {
+          console.error("Geolocation error:", error);
+          alert("Failed to get your location. Please allow location access.");
+        }
+      );
+    } catch (error) {
+      console.error("Error signing in:", error);
+      alert("Failed to sign in. Please try again.");
+    }
   };
 
   const fetchNearby = async () => {
+    if (!user?.coords) {
+      alert("Location not available.");
+      return;
+    }
+    const { lat, lng } = user.coords;
     const res = await axios.get(
-      `${baseURL}/api/users/nearby?lat=28.61&lng=77.23&radius=10`,
+      `${baseURL}/api/users/nearby?lat=${lat}&lng=${lng}&radius=10`,
       {
         headers: { Authorization: `Bearer ${user.token}` },
       }
