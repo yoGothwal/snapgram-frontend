@@ -49,7 +49,6 @@ const Explore = () => {
           justifyContent: "center",
           borderRadius: 4,
           width: "100%",
-          maxWidth: 400,
           background: "white",
         }}
       >
@@ -66,7 +65,7 @@ const Explore = () => {
               gridTemplateColumns: "repeat(2, 1fr)",
               justifyItems: "center",
               alignItems: "center",
-              gap: 0.2,
+              gap: 2,
             }}
           >
             {colors.map((color, idx) => (
@@ -82,7 +81,7 @@ const Explore = () => {
                   src={images[idx]}
                   variant="square"
                   alt={`Profile ${idx + 1}`}
-                  sx={{ width: 185, height: 150 }}
+                  sx={{ width: "auto", height: "auto" }}
                   referrerPolicy="no-referrer"
                 />
               </Box>

@@ -12,49 +12,23 @@ import Logo from "./components/Logo";
 
 import Profile from "./pages/Profile";
 import Explore from "./pages/Explore";
+import FindPeople from "./pages/FindPeople";
 
 import { auth, provider, signInWithPopup } from "./firebase";
 import axios from "axios";
 const baseURL = import.meta.env.VITE_API_URL || "/api";
-
-function FindPeople({ fetchNearby, nearby }) {
-  return (
-    <div>
-      <button onClick={fetchNearby}>Find Nearby Users</button>
-      <ul>
-        {nearby.map((u) => (
-          <li key={u.uid}>
-            {u.name} - {u.bio}
-          </li>
-        ))}
-      </ul>
-    </div>
-  );
-}
 
 function AppContent() {
   const [user, setUser] = useState(() => {
     const saved = localStorage.getItem("snapgram_user");
     return saved ? JSON.parse(saved) : null;
   });
-  const [nearby, setNearby] = useState([]);
-  const [place, setPlace] = useState("");
   useEffect(() => {
     if (user) {
       localStorage.setItem("snapgram_user", JSON.stringify(user));
     }
   }, [user]);
-  const getPlaceName = async (lat, lng) => {
-    try {
-      const res = await fetch(
-        `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lng}`
-      );
-      const data = await res.json();
-      setPlace(data.display_name || "Unknown location");
-    } catch (e) {
-      setPlace("Unknown location");
-    }
-  };
+
   const navigate = useNavigate();
 
   const signIn = async () => {
@@ -69,7 +43,7 @@ function AppContent() {
             lat: position.coords.latitude,
             lng: position.coords.longitude,
           };
-          console.log("User's location: [lat, lng]: ", coords);
+          //console.log("User's location: [lat, lng]: ", coords);
           const profilePicture =
             profile.photoURL || "https://via.placeholder.com/150";
           const res = await axios.post(
@@ -87,7 +61,6 @@ function AppContent() {
           );
           //console.log("User registered:", res.data);
           setUser({ ...res.data, token, coords });
-          getPlaceName(coords.lat, coords.lng);
           navigate("/explore");
         },
         (error) => {
@@ -99,21 +72,6 @@ function AppContent() {
       console.error("Error signing in:", error);
       alert("Failed to sign in. Please try again.");
     }
-  };
-
-  const fetchNearby = async () => {
-    if (!user?.coords) {
-      alert("Location not available.");
-      return;
-    }
-    const { lat, lng } = user.coords;
-    const res = await axios.get(
-      `${baseURL}/api/users/nearby?lat=${lat}&lng=${lng}&radius=10`,
-      {
-        headers: { Authorization: `Bearer ${user.token}` },
-      }
-    );
-    setNearby(res.data);
   };
 
   if (!user) {
@@ -131,13 +89,10 @@ function AppContent() {
       <Routes>
         <Route path="/" element={<Navigate to="/explore" />} />
         <Route path="/explore" element={<Explore />} />
-        <Route
-          path="/find-people"
-          element={<FindPeople fetchNearby={fetchNearby} nearby={nearby} />}
-        />
+        <Route path="/find-people" element={<FindPeople user={user} />} />
         <Route
           path="/profile"
-          element={<Profile user={user} setUser={setUser} place={place} />}
+          element={<Profile user={user} setUser={setUser} />}
         />
       </Routes>
     </>

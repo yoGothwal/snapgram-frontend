@@ -2,7 +2,7 @@ import { useNavigate } from "react-router-dom";
 import { Box, Avatar, Typography, Button, Paper } from "@mui/material";
 import { useRef } from "react";
 
-const Profile = ({ user, setUser, place }) => {
+const Profile = ({ user, setUser }) => {
   const navigate = useNavigate();
   const fileInputRef = useRef();
 
