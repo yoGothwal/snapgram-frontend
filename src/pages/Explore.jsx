@@ -39,54 +39,46 @@ const Explore = () => {
         display: "flex",
         justifyContent: "center",
         alignItems: "center",
-        minHeight: "calc(100vh - 120px)",
-        width: "100vw",
+        backgroundColor: "white",
+        width: "auto",
       }}
     >
       <Paper
         elevation={0}
         sx={{
+          p: 2,
           justifyContent: "center",
           borderRadius: 4,
-          width: "100%",
-          background: "white",
+          backgroundColor: "white",
         }}
       >
         <Box
           sx={{
-            display: "flex",
-            flexDirection: "column",
+            display: "grid",
+            gridTemplateColumns: "repeat(2, 1fr)",
+            justifyItems: "center",
             alignItems: "center",
+            gap: 2,
           }}
         >
-          <Box
-            sx={{
-              display: "grid",
-              gridTemplateColumns: "repeat(2, 1fr)",
-              justifyItems: "center",
-              alignItems: "center",
-              gap: 2,
-            }}
-          >
-            {colors.map((color, idx) => (
-              <Box
-                key={idx}
-                sx={{
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                }}
-              >
-                <Avatar
-                  src={images[idx]}
-                  variant="square"
-                  alt={`Profile ${idx + 1}`}
-                  sx={{ width: "auto", height: "auto" }}
-                  referrerPolicy="no-referrer"
-                />
-              </Box>
-            ))}
-          </Box>
+          {colors.map((color, idx) => (
+            <Box
+              key={idx}
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              <Avatar
+                src={images[idx]}
+                variant="square"
+                alt={`Profile ${idx + 1}`}
+                sx={{ width: "100%", height: "100%" }}
+                referrerPolicy="no-referrer"
+              />
+            </Box>
+          ))}
         </Box>
       </Paper>
     </Box>

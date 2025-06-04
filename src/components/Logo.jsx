@@ -30,7 +30,7 @@ const Content = () => {
         variant="h5"
         align="left"
         sx={{
-          fontSize: { xs: "1.5rem", sm: "2rem", md: "2.5rem" },
+          fontSize: { xs: "1.5rem", sm: "1.2rem" },
           color: "black",
           letterSpacing: 2,
           fontStyle: "italic",

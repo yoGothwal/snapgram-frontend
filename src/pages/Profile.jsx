@@ -22,21 +22,17 @@ const Profile = ({ user, setUser }) => {
   return (
     <Box
       sx={{
-        display: "flex",
         justifyContent: "center",
-        alignItems: "center",
-        minHeight: "calc(100vh - 120px)",
-        width: "100vw",
       }}
     >
       <Paper
         elevation={0}
         sx={{
+          mt: { xs: 16, sm: 4 },
+
+          m: 4,
           p: 4,
           justifyContent: "center",
-          borderRadius: 4,
-          width: "100%",
-          maxWidth: 400,
           background: "white",
         }}
       >

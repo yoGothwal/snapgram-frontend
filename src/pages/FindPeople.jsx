@@ -53,35 +53,21 @@ const FindPeople = ({ user }) => {
         display: "flex",
         justifyContent: "center",
         alignItems: "flex-start",
-        minHeight: "calc(100vh - 120px)",
       }}
     >
       <Paper
         elevation={0}
         sx={{
+          mt: { xs: 6, sm: 4 },
+
           width: "100%",
-          maxWidth: 400,
           background: "white",
           position: "relative",
         }}
       >
         {/* Spinner in the middle on top */}
-        {loading && (
-          <Box
-            sx={{
-              position: "absolute",
-              top: 16,
-              left: 0,
-              right: 0,
-              display: "flex",
-              justifyContent: "center",
-              zIndex: 2,
-            }}
-          >
-            <CircularProgress size={32} />
-          </Box>
-        )}
-        <List sx={{ pt: loading ? 6 : 0 }}>
+
+        <List sx={{ pt: loading ? 0 : 0 }}>
           {nearby.length === 0 && !loading && (
             <Typography
               variant="body2"
@@ -124,6 +110,17 @@ const FindPeople = ({ user }) => {
             </ListItem>
           ))}
         </List>
+        {loading && (
+          <Box
+            sx={{
+              display: "flex",
+              justifyContent: "center",
+              zIndex: 2,
+            }}
+          >
+            <CircularProgress size={32} />
+          </Box>
+        )}
         {!loading && (
           <Box sx={{ display: "flex", justifyContent: "center", mt: 2 }}>
             <IconButton

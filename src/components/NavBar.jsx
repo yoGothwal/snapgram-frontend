@@ -18,6 +18,7 @@ function NavBar() {
           display: "flex",
           position: "fixed",
           bottom: 0,
+          width: "100%",
           left: "50%",
           transform: "translateX(-50%)",
           p: 2,
@@ -28,6 +29,8 @@ function NavBar() {
       >
         <Box
           sx={{
+            width: "100%",
+            mx: { xs: 50, sm: 10, md: 30, lg: 60 },
             display: "flex",
             alignItems: "center",
             alignContent: "center",
