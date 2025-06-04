@@ -11,11 +11,12 @@ const Content = () => {
         top: 0,
         left: 0,
         width: "100%",
-        p: 2,
+
+        p: 1,
         justifyContent: "flex-start", // align logo to the left
         backgroundColor: "white",
         zIndex: 1300,
-        borderBottom: "1px solid #232526",
+        //borderBottom: "1px solid rgb(0, 0, 0)",
         // background:
         //   "linear-gradient(90deg,rgb(255, 255, 255) 1%, #232526 100%)",
 
@@ -30,13 +31,12 @@ const Content = () => {
         variant="h5"
         align="left"
         sx={{
-          fontSize: { xs: "1.5rem", sm: "1.2rem" },
+          fontSize: "2rem",
           color: "black",
           letterSpacing: 2,
           fontStyle: "italic",
           fontWeight: "bold",
           fontFamily: "cursive,'Pacifico'",
-          textTransform: "uppercase",
         }}
       >
         SnapGram

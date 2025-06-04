@@ -37,7 +37,7 @@ function NavBar() {
             gap: 10,
             px: "20px",
             justifyContent: "center",
-            border: "1px solid #232526",
+            border: "1px solid rgb(0, 0, 0)",
             borderRadius: 5,
           }}
         >

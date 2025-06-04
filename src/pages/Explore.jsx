@@ -36,6 +36,7 @@ const Explore = () => {
   return (
     <Box
       sx={{
+        mt: 4,
         display: "flex",
         justifyContent: "center",
         alignItems: "center",

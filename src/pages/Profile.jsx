@@ -28,7 +28,7 @@ const Profile = ({ user, setUser }) => {
       <Paper
         elevation={0}
         sx={{
-          mt: { xs: 16, sm: 4 },
+          mt: { xs: 36, sm: 36 },
 
           m: 4,
           p: 4,
