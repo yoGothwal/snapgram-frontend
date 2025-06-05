@@ -164,7 +164,6 @@ const FindPeople = ({ user }) => {
             zIndex: 1600,
             background: "white",
             p: 2,
-            border: "2px solid red",
           }}
         >
           <LocationSlider setRadius={setRadius}></LocationSlider>
