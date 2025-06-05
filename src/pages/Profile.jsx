@@ -1,7 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import { Box, Avatar, Typography, Button, Paper } from "@mui/material";
 import { useRef } from "react";
-
 const Profile = ({ user, setUser }) => {
   const navigate = useNavigate();
   const fileInputRef = useRef();
@@ -28,7 +27,7 @@ const Profile = ({ user, setUser }) => {
       <Paper
         elevation={0}
         sx={{
-          mt: { xs: 36, sm: 36 },
+          // mt: { xs: 36, sm: 36 },
 
           m: 4,
           p: 4,

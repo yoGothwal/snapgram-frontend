@@ -7,6 +7,7 @@ import GpsFixedIcon from "@mui/icons-material/GpsFixed";
 
 import Lottie from "lottie-react";
 import gpsGlow from "../assets/gpsGlow.json";
+import LocationSlider from "../components/Slider";
 import {
   Box,
   Paper,
@@ -26,6 +27,7 @@ const FindPeople = ({ user }) => {
   const [nearby, setNearby] = useState([]);
   const [loading, setLoading] = useState(false);
   const [gpsOn, setGpsOn] = useState(false);
+  const [radius, setRadius] = useState(10);
 
   const fetchNearby = useCallback(async () => {
     if (!user?.coords) {
@@ -38,7 +40,7 @@ const FindPeople = ({ user }) => {
     const delay = new Promise((resolve) => setTimeout(resolve, 1000));
     // API request
     const apiCall = axios.get(
-      `${baseURL}/api/users/nearby?lat=${lat}&lng=${lng}&radius=10`,
+      `${baseURL}/api/users/nearby?lat=${lat}&lng=${lng}&radius=${radius}`,
       {
         headers: { Authorization: `Bearer ${user.token}` },
       }
@@ -156,6 +158,9 @@ const FindPeople = ({ user }) => {
             </ListItem>
           ))}
         </List>
+        <Box sx={{ zIndex: 1600 }}>
+          <LocationSlider></LocationSlider>
+        </Box>
         {loading && (
           <Box
             sx={{
@@ -177,6 +182,7 @@ const FindPeople = ({ user }) => {
             >
               <RefreshIcon sx={{ color: "#232526", fontSize: 30 }} />
             </IconButton>
+
             {/* gps  */}
             <Box
               onClick={() => setGpsOn(!gpsOn)}
@@ -206,7 +212,7 @@ const FindPeople = ({ user }) => {
                 <Box
                   sx={{
                     position: "absolute",
-                    color: "#05a3a1",
+                    color: "blue",
 
                     top: 15,
                     left: 15,
