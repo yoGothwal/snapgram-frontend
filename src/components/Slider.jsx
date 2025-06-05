@@ -16,7 +16,6 @@ export default function SliderSizes({ setRadius }) {
         onChange={handleChange}
         min={1}
         max={100}
-        color="red"
         valueLabelDisplay="auto"
       />
       <Typography>Set Distance</Typography>
