@@ -32,7 +32,6 @@ const UserProfile = ({ user }) => {
   }, [username, user]);
 
   if (!user || !fetchedUser) return null;
-
   const handleFollow = async () => {
     try {
       await axios.post(
