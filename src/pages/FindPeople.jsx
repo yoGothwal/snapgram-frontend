@@ -77,7 +77,7 @@ const FindPeople = ({ user }) => {
           fetchNearby();
         } catch (err) {
           console.error("Location update failed:", err);
-          alert("Failed to update location");
+          alert("Failed to update locatio");
         }
       },
       (error) => {
