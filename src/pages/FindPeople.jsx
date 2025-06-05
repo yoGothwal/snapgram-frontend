@@ -203,7 +203,7 @@ const FindPeople = ({ user }) => {
                     style={{
                       position: "absolute",
                       top: -17,
-                      left: -15,
+                      left: 25,
                       width: "100%",
                       height: "100%",
                       zIndex: 0,
@@ -216,7 +216,7 @@ const FindPeople = ({ user }) => {
                     color: "blue",
 
                     top: 15,
-                    left: 15,
+                    left: 55,
                     transform: "translate(-50%, -50%)",
                     zIndex: 1,
                   }}
