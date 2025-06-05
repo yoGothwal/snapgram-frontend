@@ -2,6 +2,11 @@ import { useState, useEffect, useCallback } from "react";
 import axios from "axios";
 import { NoBgSx } from "../sx/styles";
 import RefreshIcon from "@mui/icons-material/Refresh";
+import GpsNotFixedIcon from "@mui/icons-material/GpsNotFixed";
+import GpsFixedIcon from "@mui/icons-material/GpsFixed";
+
+import Lottie from "lottie-react";
+import gpsGlow from "../assets/gpsGlow.json";
 import {
   Box,
   Paper,
@@ -20,6 +25,7 @@ const baseURL = import.meta.env.VITE_API_URL || "/api";
 const FindPeople = ({ user }) => {
   const [nearby, setNearby] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [gpsOn, setGpsOn] = useState(false);
 
   const fetchNearby = useCallback(async () => {
     if (!user?.coords) {
@@ -39,6 +45,7 @@ const FindPeople = ({ user }) => {
     );
     // Wait for both to finish
     const [res] = await Promise.all([apiCall, delay]);
+    console.log("users", res.data);
     setNearby(res.data);
     setLoading(false);
   }, [user]);
@@ -46,6 +53,45 @@ const FindPeople = ({ user }) => {
   useEffect(() => {
     fetchNearby();
   }, [fetchNearby]);
+
+  const updateLocation = async () => {
+    if (!navigator.geolocation) {
+      alert("Geolocation is not supported by your browser");
+      return;
+    }
+
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        const lat = position.coords.latitude;
+        const lng = position.coords.longitude;
+        try {
+          await axios.put(
+            `${baseURL}/api/users/update-location`,
+            { lat, lng },
+            {
+              headers: { Authorization: `Bearer ${user.token}` },
+            }
+          );
+          setGpsOn(true);
+          user.coords = { lat, lng }; // update local user coords
+          fetchNearby();
+        } catch (err) {
+          console.error("Location update failed:", err);
+          alert("Failed to update location");
+        }
+      },
+      (error) => {
+        console.error("Location fetch error:", error);
+        alert("Unable to fetch location");
+      },
+      { enableHighAccuracy: true }
+    );
+  };
+  useEffect(() => {
+    if (gpsOn) {
+      updateLocation();
+    }
+  }, [gpsOn]);
 
   return (
     <Box
@@ -131,6 +177,51 @@ const FindPeople = ({ user }) => {
             >
               <RefreshIcon sx={{ color: "#232526", fontSize: 30 }} />
             </IconButton>
+            {/* gps  */}
+            <Box
+              onClick={() => setGpsOn(!gpsOn)}
+              sx={{
+                position: "fixed",
+                top: 20,
+                right: 30,
+                zIndex: 1500,
+              }}
+            >
+              <Box sx={{ position: "relative", width: 60, height: 60 }}>
+                {gpsOn && (
+                  <Lottie
+                    animationData={gpsGlow}
+                    loop
+                    autoplay
+                    style={{
+                      position: "absolute",
+                      top: -17,
+                      left: -15,
+                      width: "100%",
+                      height: "100%",
+                      zIndex: 0,
+                    }}
+                  />
+                )}
+                <Box
+                  sx={{
+                    position: "absolute",
+                    color: "#05a3a1",
+
+                    top: 15,
+                    left: 15,
+                    transform: "translate(-50%, -50%)",
+                    zIndex: 1,
+                  }}
+                >
+                  {gpsOn ? (
+                    <GpsFixedIcon sx={{ fontSize: 30 }} />
+                  ) : (
+                    <GpsNotFixedIcon sx={{ fontSize: 30 }} />
+                  )}
+                </Box>
+              </Box>
+            </Box>
           </Box>
         )}
       </Paper>
