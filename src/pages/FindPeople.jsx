@@ -147,6 +147,7 @@ const FindPeople = ({ user }) => {
         >
           <TextField
             fullWidth
+            size="small"
             variant="outlined"
             placeholder="Search people..."
             value={searchQuery}
@@ -158,7 +159,9 @@ const FindPeople = ({ user }) => {
               "& .MuiOutlinedInput-root": {
                 "& fieldset": {
                   borderColor: "#e0e0e0",
+                  borderRadius: "24px",
                 },
+                borderRadius: "24px",
               },
             }}
           />

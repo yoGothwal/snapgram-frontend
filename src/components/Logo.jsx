@@ -1,5 +1,7 @@
 import { Typography, Box } from "@mui/material";
 import { useNavigate } from "react-router-dom";
+import MessageIcon from "@mui/icons-material/Message";
+import NotificationsIcon from "@mui/icons-material/Notifications";
 const Content = () => {
   const navigate = useNavigate();
 
@@ -13,17 +15,9 @@ const Content = () => {
         width: "100%",
 
         p: 1,
-        justifyContent: "flex-start", // align logo to the left
+        justifyContent: "space-between", // align logo to the left
         backgroundColor: "white",
         zIndex: 1300,
-        //borderBottom: "1px solid rgb(0, 0, 0)",
-        // background:
-        //   "linear-gradient(90deg,rgb(255, 255, 255) 1%, #232526 100%)",
-
-        //boxShadow: 6,
-        //borderRadius: 4,
-        //background: "rgba(35,37,38,0.85)", // dark glass effect
-        // border: "1px solid rgba(255,215,100,0.25)", // subtle gold border
       }}
     >
       <Typography
@@ -41,6 +35,10 @@ const Content = () => {
       >
         SnapGram
       </Typography>
+      <Box mx={2} my={1} sx={{ display: "flex", gap: 1 }}>
+        <MessageIcon sx={{ fontSize: 25 }}></MessageIcon>
+        <NotificationsIcon sx={{ fontSize: 25 }}></NotificationsIcon>
+      </Box>
     </Box>
   );
 };

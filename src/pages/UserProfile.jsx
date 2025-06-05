@@ -1,5 +1,5 @@
 import { useNavigate, useParams } from "react-router-dom";
-import { Box, Avatar, Typography, Paper } from "@mui/material";
+import { Box, Avatar, Typography, Paper, Button } from "@mui/material";
 import { useEffect, useState } from "react";
 import axios from "axios";
 const baseURL = import.meta.env.VITE_API_URL || "/api";
@@ -8,20 +8,70 @@ const UserProfile = ({ user }) => {
   const navigate = useNavigate();
   const [fetchedUser, setFetchedUser] = useState(null);
   const { username } = useParams();
+  const [isFollowing, setIsFollowing] = useState(false);
 
   const fetchUser = async () => {
-    const res = await axios.get(`${baseURL}/api/users/${username}`, {
-      headers: { Authorization: `Bearer ${user.token}` },
-    });
-    const u = res.data.user;
-    console.log(u);
-    setFetchedUser(u);
+    try {
+      const res = await axios.get(`${baseURL}/api/users/${username}`, {
+        headers: { Authorization: `Bearer ${user.token}` },
+      });
+      const u = res.data.user;
+      setFetchedUser(u);
+      // Check if current user is following this user
+      setIsFollowing(u.followers.includes(user._id));
+    } catch (error) {
+      console.error("Error fetching user:", error);
+    }
   };
+
   useEffect(() => {
-    fetchUser();
-  }, []);
+    if (user) {
+      // Only fetch if user is available
+      fetchUser();
+    }
+  }, [username, user]);
 
   if (!user || !fetchedUser) return null;
+
+  const handleFollow = async () => {
+    try {
+      await axios.post(
+        `${baseURL}/api/users/follow/${fetchedUser._id}`,
+        {},
+        {
+          headers: { Authorization: `Bearer ${user.token}` },
+        }
+      );
+      setIsFollowing(true);
+      // Update the local state to reflect the new follower
+      setFetchedUser((prev) => ({
+        ...prev,
+        followers: [...prev.followers, user._id],
+      }));
+    } catch (error) {
+      console.error("Error following user:", error);
+    }
+  };
+
+  const handleUnfollow = async () => {
+    try {
+      await axios.post(
+        `${baseURL}/api/users/unfollow/${fetchedUser._id}`,
+        {},
+        {
+          headers: { Authorization: `Bearer ${user.token}` },
+        }
+      );
+      setIsFollowing(false);
+      // Update the local state to remove the follower
+      setFetchedUser((prev) => ({
+        ...prev,
+        followers: prev.followers.filter((id) => id !== user._id),
+      }));
+    } catch (error) {
+      console.error("Error unfollowing user:", error);
+    }
+  };
 
   return (
     <Box
@@ -73,6 +123,16 @@ const UserProfile = ({ user }) => {
           >
             {fetchedUser.bio}
           </Typography>
+
+          {isFollowing ? (
+            <Button onClick={handleUnfollow} variant="outlined" color="error">
+              Unfollow
+            </Button>
+          ) : (
+            <Button onClick={handleFollow} variant="contained" color="primary">
+              Follow
+            </Button>
+          )}
         </Box>
       </Paper>
     </Box>
