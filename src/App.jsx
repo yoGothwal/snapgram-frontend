@@ -11,6 +11,7 @@ import Navbar from "./components/NavBar";
 import Logo from "./components/Logo";
 
 import Profile from "./pages/Profile";
+import UserProfile from "./pages/UserProfile";
 import Explore from "./pages/Explore";
 import FindPeople from "./pages/FindPeople";
 
@@ -94,6 +95,7 @@ function AppContent() {
           path="/profile"
           element={<Profile user={user} setUser={setUser} />}
         />
+        <Route path="/users/:username" element={<UserProfile user={user} />} />
       </Routes>
     </>
   );

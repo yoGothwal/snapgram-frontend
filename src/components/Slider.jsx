@@ -10,7 +10,7 @@ export default function SliderSizes({ setRadius }) {
     setRadius(newValue);
   };
   return (
-    <Box sx={{ width: 100 }}>
+    <Box sx={{ width: "auto" }}>
       <Slider
         value={value}
         onChange={handleChange}
@@ -18,7 +18,6 @@ export default function SliderSizes({ setRadius }) {
         max={100}
         valueLabelDisplay="auto"
       />
-      <Typography>Set Distance</Typography>
     </Box>
   );
 }
