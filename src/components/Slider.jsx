@@ -1,11 +1,23 @@
-import { Typography } from "@mui/material";
-import Box from "@mui/material/Box";
-import Slider from "@mui/material/Slider";
+import { Typography, Box, Slider } from "@mui/material";
 
-export default function SliderSizes() {
+import { useState } from "react";
+
+export default function SliderSizes({ setRadius }) {
+  const [value, setValue] = useState(10);
+  const handleChange = (event, newValue) => {
+    console.log("setting radius: ", newValue);
+    setValue(newValue);
+    setRadius(newValue);
+  };
   return (
-    <Box sx={{ width: 100, zIndex: 1, mt: 2, p: 4 }}>
-      <Slider defaultValue={50} valueLabelDisplay="auto" />{" "}
+    <Box sx={{ width: 100 }}>
+      <Slider
+        value={value}
+        onChange={handleChange}
+        min={1}
+        max={100}
+        valueLabelDisplay="auto"
+      />
       <Typography>Set Distance</Typography>
     </Box>
   );

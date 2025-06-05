@@ -30,6 +30,7 @@ const FindPeople = ({ user }) => {
   const [radius, setRadius] = useState(10);
 
   const fetchNearby = useCallback(async () => {
+    console.log("searching for within: ", radius);
     if (!user?.coords) {
       alert("Location not available.");
       return;
@@ -54,7 +55,7 @@ const FindPeople = ({ user }) => {
 
   useEffect(() => {
     fetchNearby();
-  }, [fetchNearby]);
+  }, [radius, fetchNearby]);
 
   const updateLocation = async () => {
     if (!navigator.geolocation) {
@@ -159,7 +160,7 @@ const FindPeople = ({ user }) => {
           ))}
         </List>
         <Box sx={{ zIndex: 1600 }}>
-          <LocationSlider></LocationSlider>
+          <LocationSlider setRadius={setRadius}></LocationSlider>
         </Box>
         {loading && (
           <Box
