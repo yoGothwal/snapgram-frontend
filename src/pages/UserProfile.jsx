@@ -1,5 +1,13 @@
 import { useNavigate, useParams } from "react-router-dom";
-import { Box, Avatar, Typography, Paper, Button } from "@mui/material";
+import {
+  Box,
+  Avatar,
+  Typography,
+  Paper,
+  Button,
+  Snackbar,
+  Alert,
+} from "@mui/material";
 import { useEffect, useState } from "react";
 import axios from "axios";
 const baseURL = import.meta.env.VITE_API_URL || "/api";
@@ -9,6 +17,12 @@ const UserProfile = ({ user }) => {
   const [fetchedUser, setFetchedUser] = useState(null);
   const { username } = useParams();
   const [isFollowing, setIsFollowing] = useState(false);
+
+  const [notification, setNotification] = useState({
+    open: false,
+    message: "",
+    severity: "success",
+  });
 
   const fetchUser = async () => {
     try {
@@ -31,7 +45,10 @@ const UserProfile = ({ user }) => {
     }
   }, [username, user]);
 
+  // Sometimes you have are setting useState to null. Then it might be possible that it will show error in starting. Like const [v,setV] = useState(null)
+  // Then you need something like if(!v) return <p> loading<p></p>
   if (!user || !fetchedUser) return null;
+
   const handleFollow = async () => {
     try {
       await axios.post(
@@ -47,8 +64,18 @@ const UserProfile = ({ user }) => {
         ...prev,
         followers: [...prev.followers, user._id],
       }));
+      setNotification({
+        open: true,
+        message: `You are now follwing ${fetchedUser.username}`,
+        severity: "success",
+      });
     } catch (error) {
       console.error("Error following user:", error);
+      setNotification({
+        open: true,
+        message: `Failed to follow user`,
+        severity: "error",
+      });
     }
   };
 
@@ -67,8 +94,18 @@ const UserProfile = ({ user }) => {
         ...prev,
         followers: prev.followers.filter((id) => id !== user._id),
       }));
+      setNotification({
+        open: true,
+        message: `Unfollwed ${fetchedUser.username}`,
+        severity: "success",
+      });
     } catch (error) {
       console.error("Error unfollowing user:", error);
+      setNotification({
+        open: true,
+        message: `Failed to unfollow user`,
+        severity: "error",
+      });
     }
   };
 
@@ -134,6 +171,13 @@ const UserProfile = ({ user }) => {
           )}
         </Box>
       </Paper>
+      <Snackbar
+        open={notification.open}
+        autoHideDuration={3000}
+        onClose={() => setNotification({ ...notification, open: false })}
+      >
+        <Alert>{notification.message}</Alert>
+      </Snackbar>
     </Box>
   );
 };

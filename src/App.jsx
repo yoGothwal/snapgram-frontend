@@ -85,7 +85,7 @@ function AppContent() {
 
   return (
     <>
-      <Logo></Logo>
+      <Logo user={user}></Logo>
       <Navbar setUser={setUser} />
       <Routes>
         <Route path="/" element={<Navigate to="/explore" />} />
