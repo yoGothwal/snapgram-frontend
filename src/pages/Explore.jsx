@@ -42,6 +42,7 @@ const Explore = () => {
         alignItems: "center",
         backgroundColor: "white",
         width: "auto",
+        px: 2, // Add horizontal padding
       }}
     >
       <Paper
@@ -51,12 +52,18 @@ const Explore = () => {
           justifyContent: "center",
           borderRadius: 4,
           backgroundColor: "white",
+          width: "100%",
+          maxWidth: "md", // Constrain maximum width
         }}
       >
         <Box
           sx={{
             display: "grid",
-            gridTemplateColumns: "repeat(2, 1fr)",
+            gridTemplateColumns: {
+              xs: "repeat(2, 1fr)",
+              sm: "repeat(3, 1fr)",
+              md: "repeat(4, 1fr)",
+            },
             justifyItems: "center",
             alignItems: "center",
             gap: 2,
@@ -66,16 +73,31 @@ const Explore = () => {
             <Box
               key={idx}
               sx={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
+                width: "100%",
+                aspectRatio: "1/1", // Make square
+                borderRadius: 2,
+                overflow: "hidden",
+                position: "relative",
+                "&:hover": {
+                  transform: "scale(1.03)",
+                  transition: "transform 0.2s ease",
+                },
+                background: color, // Use gradient as fallback
               }}
             >
               <Avatar
                 src={images[idx]}
                 variant="square"
                 alt={`Profile ${idx + 1}`}
-                sx={{ width: "100%", height: "100%" }}
+                sx={{
+                  width: "100%",
+                  height: "100%",
+                  objectFit: "cover",
+                  transition: "opacity 0.3s ease",
+                  "&:hover": {
+                    opacity: 0.8,
+                  },
+                }}
                 referrerPolicy="no-referrer"
               />
             </Box>
@@ -85,5 +107,4 @@ const Explore = () => {
     </Box>
   );
 };
-
 export default Explore;

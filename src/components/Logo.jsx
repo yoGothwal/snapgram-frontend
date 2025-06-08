@@ -4,18 +4,21 @@ import { useEffect, useState } from "react";
 import MessageIcon from "@mui/icons-material/Message";
 import NotificationsIcon from "@mui/icons-material/Notifications";
 import axios from "axios";
+import { useSelector } from "react-redux";
 
 const baseURL = import.meta.env.VITE_API_URL || "/api";
 
-const Content = ({ user }) => {
+const Content = () => {
   const [anchorEl, setAnchorEl] = useState(null);
   const [notifications, setNotifications] = useState([]);
   const navigate = useNavigate();
+  const user = useSelector((state) => state.user.user);
+  const token = useSelector((state) => state.user.token);
 
   const fetchNotifications = async () => {
     try {
       const res = await axios.get(`${baseURL}/api/users/notifications`, {
-        headers: { Authorization: `Bearer ${user.token}` },
+        headers: { Authorization: `Bearer ${token}` },
       });
       setNotifications(res.data);
     } catch (e) {
@@ -41,7 +44,7 @@ const Content = ({ user }) => {
         `${baseURL}/api/users/notifications/${n._id}/seen`,
         {},
         {
-          headers: { Authorization: `Bearer ${user.token}` },
+          headers: { Authorization: `Bearer ${token}` },
         }
       );
       navigate(`/users/${n.from.username}`);
@@ -49,6 +52,9 @@ const Content = ({ user }) => {
       console.error("Error marking notification as seen:", err);
       navigate(`/users/${n.from.username}`); // fallback
     }
+  };
+  const openChat = () => {
+    navigate("/chat");
   };
 
   const open = Boolean(anchorEl);
@@ -69,7 +75,7 @@ const Content = ({ user }) => {
       }}
     >
       <Typography
-        onClick={() => navigate("/dashboard")}
+        onClick={() => navigate("/explore")}
         variant="h5"
         align="left"
         sx={{
@@ -84,7 +90,7 @@ const Content = ({ user }) => {
         SnapGram
       </Typography>
       <Box mx={2} my={1} sx={{ display: "flex", gap: 1 }}>
-        <MessageIcon sx={{ fontSize: 25 }}></MessageIcon>
+        <MessageIcon onClick={openChat} sx={{ fontSize: 25 }}></MessageIcon>
         <Box onClick={handleNotificationIconClick}>
           <NotificationsIcon sx={{ fontSize: 25 }}></NotificationsIcon>
         </Box>
@@ -97,12 +103,18 @@ const Content = ({ user }) => {
             vertical: "bottom",
             horizontal: "left",
           }}
+          PaperProps={{
+            sx: {
+              backgroundColor: "white",
+              boxShadow: "none",
+            },
+          }}
         >
           {notifications.filter((n) => !n.seen).length === 0 ? (
             <Typography sx={{ p: 2 }}>No new notifications</Typography>
           ) : (
             notifications
-              .filter((n) => !n.seen)
+              //mongo.filter((n) => !n.seen)
               .map((n) => (
                 <Box
                   key={n._id}
@@ -113,7 +125,9 @@ const Content = ({ user }) => {
                     gap: 1.5,
                     p: 2,
                     cursor: "pointer",
-                    borderBottom: "1px solid #eee",
+                    backgroundColor: "white",
+                    border: "1px solid #eee",
+                    borderRadius: 1,
                     "&:hover": { backgroundColor: "#f9f9f9" },
                   }}
                 >
@@ -123,7 +137,12 @@ const Content = ({ user }) => {
                     sx={{ width: 32, height: 32 }}
                   />
                   <Typography variant="body2">
-                    <strong>{n.from.username}</strong> started following you
+                    <strong>{n.from.username}</strong>{" "}
+                    {n.type === "follow"
+                      ? "started following you"
+                      : n.type === "like"
+                        ? "liked your post"
+                        : n.message}
                   </Typography>
                 </Box>
               ))
@@ -133,19 +152,18 @@ const Content = ({ user }) => {
     </Box>
   );
 };
-const Logo = ({ user }) => {
+const Logo = () => {
   return (
     <Box sx={{ position: "relative" }}>
       <Box
         sx={{
           position: "sticky",
-
           zIndex: 1000,
           width: "100%",
           height: 20,
         }}
       >
-        <Content user={user} />
+        <Content />
       </Box>
     </Box>
   );

@@ -9,6 +9,8 @@ import SearchIcon from "@mui/icons-material/Search";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import ExpandLessIcon from "@mui/icons-material/ExpandLess";
 
+import { useDebounce } from "../hooks/useDebounce";
+
 import Lottie from "lottie-react";
 import gpsGlow from "../assets/gpsGlow.json";
 import LocationSlider from "../components/Slider";
@@ -27,43 +29,69 @@ import {
   Collapse,
 } from "@mui/material";
 import { useNavigate } from "react-router-dom";
+import { useSelector } from "react-redux";
 
 const baseURL = import.meta.env.VITE_API_URL || "/api";
 
-const FindPeople = ({ user }) => {
+const FindPeople = () => {
+  const user = useSelector((state) => state.user.user);
+  const token = useSelector((state) => state.user.token);
+  const coords = useSelector((state) => state.user.coords);
+
   const navigate = useNavigate();
   const [nearby, setNearby] = useState([]);
   const [loading, setLoading] = useState(false);
   const [gpsOn, setGpsOn] = useState(false);
+  console.log("nearby people:", nearby);
   const [radius, setRadius] = useState(10);
+  const debouncedRadius = useDebounce(radius, 500);
+
   const [searchQuery, setSearchQuery] = useState("");
   const [showFilters, setShowFilters] = useState(false);
 
-  const fetchNearby = useCallback(async () => {
+  const fetchNearby = async () => {
     console.log("searching for within: ", radius);
-    if (!user?.coords) {
+    if (!coords) {
       alert("Location not available.");
       return;
     }
     setLoading(true);
-    const { lat, lng } = user.coords;
-    const delay = new Promise((resolve) => setTimeout(resolve, 1000));
-    const apiCall = axios.get(
-      `${baseURL}/api/users/nearby?lat=${lat}&lng=${lng}&radius=${radius}`,
-      {
-        headers: { Authorization: `Bearer ${user.token}` },
+    try {
+      const { lat, lng } = coords;
+      const cacheKey = `nearby-${lat}-${lng}-${debouncedRadius}`;
+      const cachedData = sessionStorage.getItem(cacheKey);
+      if (cachedData) {
+        setNearby(JSON.parse(cachedData));
+        return;
       }
-    );
-    const [res] = await Promise.all([apiCall, delay]);
-    console.log("users", res.data);
-    setNearby(res.data);
-    setLoading(false);
-  }, [user, radius]);
+      const delay = new Promise((resolve) => setTimeout(resolve, 1000));
+      const apiCall = axios.get(
+        `${baseURL}/api/users/nearby?lat=${lat}&lng=${lng}&radius=${debouncedRadius}`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+      const [res] = await Promise.all([apiCall, delay]);
+
+      setNearby(res.data.filter((n) => n._id !== user._id));
+      sessionStorage.setItem(cacheKey, JSON.stringify(res.data));
+    } catch (error) {
+      console.error("Fetch error:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
     fetchNearby();
-  }, [radius, fetchNearby]);
+  }, [debouncedRadius]);
 
+  useEffect(() => {
+    if (gpsOn && !coords) {
+      const interval = setInterval(updateLocation, 30000);
+      return () => clearInterval(interval);
+    }
+  }, [gpsOn]);
   const updateLocation = async () => {
     if (!navigator.geolocation) {
       alert("Geolocation is not supported by your browser");
@@ -79,7 +107,7 @@ const FindPeople = ({ user }) => {
             `${baseURL}/api/users/update-location`,
             { lat, lng },
             {
-              headers: { Authorization: `Bearer ${user.token}` },
+              headers: { Authorization: `Bearer ${token}` },
             }
           );
           setGpsOn(true);
@@ -97,23 +125,21 @@ const FindPeople = ({ user }) => {
       { enableHighAccuracy: true }
     );
   };
-
-  useEffect(() => {
-    if (gpsOn) {
-      updateLocation();
-    }
-  }, [gpsOn]);
-
   const handlePersonClick = (u) => {
     console.log("clicked");
-    navigate(`/users/${u.username}`);
+    navigate(`/${u.username}`);
   };
 
-  const filteredUsers = nearby.filter(
-    (user) =>
-      user.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      user.username.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredUsers = nearby
+    ? nearby.filter((u) => {
+        const isNotCurrentUser = u._id !== user?._id;
+        const matchesSearch = searchQuery
+          ? u.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            u.username?.toLowerCase().includes(searchQuery.toLowerCase())
+          : true;
+        return isNotCurrentUser && matchesSearch;
+      })
+    : [];
 
   return (
     <Box
@@ -126,7 +152,6 @@ const FindPeople = ({ user }) => {
       <Paper
         elevation={0}
         sx={{
-          mt: { xs: 4, sm: 4 },
           width: "100%",
           background: "white",
           position: "relative",
@@ -218,8 +243,8 @@ const FindPeople = ({ user }) => {
                       position: "absolute",
                       width: 60,
                       height: 60,
-                      top: -10,
-                      left: -10,
+                      top: -6,
+                      left: -6,
                       zIndex: 0,
                     }}
                   />
@@ -261,43 +286,45 @@ const FindPeople = ({ user }) => {
               No nearby users found.
             </Typography>
           )}
-          {filteredUsers.map((u) => (
-            <ListItem
-              key={u.uid}
-              sx={{ mb: 1 }}
-              onClick={() => handlePersonClick(u)}
-            >
-              <ListItemAvatar>
-                <Avatar
-                  src={
-                    u.profilePicture ||
-                    "https://randomuser.me/api/portraits/lego/1.jpg"
+          {filteredUsers
+            .filter((u) => u._id != user._id)
+            .map((u) => (
+              <ListItem
+                key={u.uid}
+                sx={{ mb: 1 }}
+                onClick={() => handlePersonClick(u)}
+              >
+                <ListItemAvatar>
+                  <Avatar
+                    src={
+                      u.profilePicture ||
+                      "https://randomuser.me/api/portraits/lego/1.jpg"
+                    }
+                  />
+                </ListItemAvatar>
+                <ListItemText
+                  primary={
+                    <Typography
+                      sx={{ fontWeight: "bold", color: "#232526" }}
+                      component="span"
+                    >
+                      {u.name}
+                    </Typography>
+                  }
+                  secondary={
+                    <>
+                      <Typography
+                        variant="body2"
+                        sx={{ color: "#555" }}
+                        component={"span"}
+                      >
+                        @{u.username}
+                      </Typography>
+                    </>
                   }
                 />
-              </ListItemAvatar>
-              <ListItemText
-                primary={
-                  <Typography
-                    sx={{ fontWeight: "bold", color: "#232526" }}
-                    component="span"
-                  >
-                    {u.name}
-                  </Typography>
-                }
-                secondary={
-                  <>
-                    <Typography
-                      variant="body2"
-                      sx={{ color: "#555" }}
-                      component={"span"}
-                    >
-                      @{u.username}
-                    </Typography>
-                  </>
-                }
-              />
-            </ListItem>
-          ))}
+              </ListItem>
+            ))}
         </List>
 
         {loading && (
@@ -308,11 +335,11 @@ const FindPeople = ({ user }) => {
               zIndex: 2,
             }}
           >
-            <CircularProgress size={32} />
+            <CircularProgress size={50} />
           </Box>
         )}
-        {!loading && (
-          <Box sx={{ display: "flex", justifyContent: "center", mt: 2 }}>
+        {/* {!loading && (
+          <Box sx={{ display: "flex", justifyContent: "center" }}>
             <IconButton
               sx={NoBgSx}
               disableRipple
@@ -322,7 +349,7 @@ const FindPeople = ({ user }) => {
               <RefreshIcon sx={{ color: "#232526", fontSize: 30 }} />
             </IconButton>
           </Box>
-        )}
+        )} */}
       </Paper>
     </Box>
   );

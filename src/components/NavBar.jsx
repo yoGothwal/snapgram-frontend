@@ -2,70 +2,97 @@ import { Box } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
 import ProfileIcon from "@mui/icons-material/Person";
 import ExploreIcon from "@mui/icons-material/Explore";
-
 import IconButton from "@mui/material/IconButton";
-
 import { useNavigate } from "react-router-dom";
-
 import { NoBgSx } from "../sx/styles";
 
 function NavBar() {
   const navigate = useNavigate();
   return (
-    <>
+    <Box
+      sx={{
+        display: "flex",
+        position: "fixed",
+        bottom: 0,
+        width: "100%",
+        left: "50%",
+        transform: "translateX(-50%)",
+        py: 1,
+        justifyContent: "center",
+        backgroundColor: "white",
+        zIndex: 1300,
+        borderTop: "1px solid rgba(0, 0, 0, 0.12)",
+      }}
+    >
       <Box
         sx={{
+          width: { xs: "80%", md: "70%", lg: "60%" },
+          maxWidth: 600,
           display: "flex",
-          position: "fixed",
-          bottom: 0,
-          width: "100%",
-          left: "50%",
-          transform: "translateX(-50%)",
-          p: 2,
-          justifyContent: "center",
-          backgroundColor: "white",
-          zIndex: 1300,
+          alignItems: "center",
+          justifyContent: "space-evenly",
+          px: { xs: 1, sm: 2 },
+          py: 1,
+          border: "1px solid rgb(0, 0, 0)",
+          borderRadius: 5,
+          backgroundColor: "background.paper",
         }}
       >
-        <Box
+        <IconButton
           sx={{
-            width: "100%",
-            mx: { xs: 50, sm: 10, md: 30, lg: 60 },
-            display: "flex",
-            alignItems: "center",
-            alignContent: "center",
-            gap: 10,
-            px: "20px",
-            justifyContent: "center",
-            border: "1px solid rgb(0, 0, 0)",
-            borderRadius: 5,
+            ...NoBgSx,
+            "&:hover": { transform: "scale(1.1)" },
+            transition: "transform 0.2s ease",
           }}
+          onClick={() => navigate("/explore")}
+          disableRipple
+          size="medium"
         >
-          <IconButton
-            sx={NoBgSx}
-            onClick={() => navigate("/explore")}
-            disableRipple
-          >
-            <ExploreIcon sx={{ color: "#232526", fontSize: 30 }} />
-          </IconButton>
+          <ExploreIcon
+            sx={{
+              color: "#232526",
+              fontSize: { xs: 26, sm: 28 },
+            }}
+          />
+        </IconButton>
 
-          <IconButton
-            sx={NoBgSx}
-            onClick={() => navigate("/find-people")}
-            disableRipple
-          >
-            <SearchIcon sx={{ color: "#232526", fontSize: 30 }} />
-          </IconButton>
-          <IconButton
-            sx={NoBgSx}
-            onClick={() => navigate("/profile")}
-            disableRipple
-          >
-            <ProfileIcon sx={{ color: "#232526", fontSize: 30 }} />
-          </IconButton>
-        </Box>
+        <IconButton
+          sx={{
+            ...NoBgSx,
+            "&:hover": { transform: "scale(1.1)" },
+            transition: "transform 0.2s ease",
+          }}
+          onClick={() => navigate("/find-people")}
+          disableRipple
+          size="medium"
+        >
+          <SearchIcon
+            sx={{
+              color: "#232526",
+              fontSize: { xs: 26, sm: 28 },
+            }}
+          />
+        </IconButton>
+
+        <IconButton
+          sx={{
+            ...NoBgSx,
+            "&:hover": { transform: "scale(1.1)" },
+            transition: "transform 0.2s ease",
+          }}
+          onClick={() => navigate("/profile")}
+          disableRipple
+          size="medium"
+        >
+          <ProfileIcon
+            sx={{
+              color: "#232526",
+              fontSize: { xs: 26, sm: 28 },
+            }}
+          />
+        </IconButton>
       </Box>
-    </>
+    </Box>
   );
 }
 
