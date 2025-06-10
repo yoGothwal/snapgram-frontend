@@ -30,7 +30,7 @@ import {
 } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
-
+import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 const baseURL = import.meta.env.VITE_API_URL || "/api";
 
 const FindPeople = () => {
@@ -42,7 +42,6 @@ const FindPeople = () => {
   const [nearby, setNearby] = useState([]);
   const [loading, setLoading] = useState(false);
   const [gpsOn, setGpsOn] = useState(false);
-  console.log("nearby people:", nearby);
   const [radius, setRadius] = useState(10);
   const debouncedRadius = useDebounce(radius, 500);
 
@@ -73,8 +72,11 @@ const FindPeople = () => {
       );
       const [res] = await Promise.all([apiCall, delay]);
 
-      setNearby(res.data.filter((n) => n._id !== user._id));
-      sessionStorage.setItem(cacheKey, JSON.stringify(res.data));
+      const filteredNearby = res.data.filter((n) => n._id !== user._id);
+      setNearby(filteredNearby);
+      console.log("Nearby people:", filteredNearby);
+
+      sessionStorage.setItem(cacheKey, JSON.stringify(filteredNearby));
     } catch (error) {
       console.error("Fetch error:", error);
     } finally {
@@ -160,7 +162,7 @@ const FindPeople = () => {
         {/* Search Box */}
         <Box
           sx={{
-            p: 2,
+            p: 1,
             position: "sticky",
             top: 0,
             zIndex: 100,
@@ -170,6 +172,15 @@ const FindPeople = () => {
             gap: 1,
           }}
         >
+          <Box
+            onClick={() => navigate(-1)}
+            sx={{
+              mr: 1,
+              cursor: "pointer",
+            }}
+          >
+            <ArrowBackIcon />
+          </Box>
           <TextField
             fullWidth
             size="small"
@@ -277,7 +288,7 @@ const FindPeople = () => {
           </Box>
         </Collapse>
 
-        <List sx={{ pt: loading ? 0 : 0 }}>
+        <List>
           {filteredUsers.length === 0 && !loading && (
             <Typography
               variant="body2"
@@ -291,7 +302,11 @@ const FindPeople = () => {
             .map((u) => (
               <ListItem
                 key={u.uid}
-                sx={{ mb: 1 }}
+                sx={{
+                  mb: 1,
+                  cursor: "pointer",
+                  "&:hover": { backgroundColor: "rgba(0,0,0,0.05)" },
+                }}
                 onClick={() => handlePersonClick(u)}
               >
                 <ListItemAvatar>
@@ -313,11 +328,7 @@ const FindPeople = () => {
                   }
                   secondary={
                     <>
-                      <Typography
-                        variant="body2"
-                        sx={{ color: "#555" }}
-                        component={"span"}
-                      >
+                      <Typography variant="body2" sx={{ color: "#555" }}>
                         @{u.username}
                       </Typography>
                     </>

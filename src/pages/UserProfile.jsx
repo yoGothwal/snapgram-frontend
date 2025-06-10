@@ -384,8 +384,6 @@ const UserProfile = () => {
 
   const followings = useSelector((state) => state.connection.followings);
 
-  const { username } = useParams();
-
   const [fetchedUser, setFetchedUser] = useState(null);
   const [isFollowing, setIsFollowing] = useState(false);
   const [notification, setNotification] = useState({
@@ -393,10 +391,8 @@ const UserProfile = () => {
     message: "",
     severity: "success",
   });
-  const [count, setCount] = useState({
-    flwrCount: 0,
-    flwnCount: 0,
-  });
+
+  const { username } = useParams();
   const fetchUser = async () => {
     try {
       const res = await axios.get(`${baseURL}/api/users/${username}`, {
@@ -497,7 +493,7 @@ const UserProfile = () => {
     }
   };
   const handleFollowingClick = () => {
-    navigate(`/${fetchedUser.user.username}/connections`);
+    navigate(`/connections/${fetchedUser.user.username}`);
   };
   const handleChatClick = () => {
     navigate(`/chat/${fetchedUser.user.username}`);
@@ -505,7 +501,7 @@ const UserProfile = () => {
   const userContent = Array(9).fill(null);
 
   return (
-    <Box sx={{ maxWidth: "800px", mx: "auto", p: 2, mt: 4 }}>
+    <Box sx={{ maxWidth: "800px", mx: "auto", p: 2, mt: 2 }}>
       {/* Profile Info */}
       <ProfileCard>
         {/* Profile Picture and User Info Section */}
@@ -554,7 +550,7 @@ const UserProfile = () => {
             <Typography
               variant="body1"
               sx={{
-                mb: 2,
+                mt: 2,
                 wordBreak: "break-word",
                 width: "100%",
               }}
@@ -576,10 +572,6 @@ const UserProfile = () => {
           }}
         >
           <StatItem
-            value={fetchedUser.user.postsCount || 0}
-            label="PUBLICATIONS"
-          />
-          <StatItem
             onClick={handleFollowingClick}
             value={fetchedUser.user.followerCount || 0}
             label="CONNECTIONS"
@@ -588,6 +580,10 @@ const UserProfile = () => {
             onClick={handleFollowingClick}
             value={fetchedUser.user.followingCount || 0}
             label="FOLLOWING"
+          />
+          <StatItem
+            value={fetchedUser.user.postsCount || 0}
+            label="PUBLICATIONS"
           />
         </Box>
       </ProfileCard>

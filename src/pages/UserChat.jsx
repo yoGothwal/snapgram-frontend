@@ -76,9 +76,6 @@ const UserChat = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  const handleBack = () => {
-    navigate(-1);
-  };
   return (
     <Box
       sx={{
@@ -104,7 +101,7 @@ const UserChat = () => {
           zIndex: 10,
         }}
       >
-        <Box onClick={handleBack} sx={{ mr: 1 }}>
+        <Box onClick={() => navigate(-1)} sx={{ mr: 1 }}>
           <ArrowBackIcon />
         </Box>
         <Badge

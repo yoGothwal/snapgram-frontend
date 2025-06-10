@@ -26,6 +26,7 @@ import axios from "axios";
 import { useSelector } from "react-redux";
 import LoginPage from "./pages/LoginPage";
 import Connections from "./pages/Connections";
+import { setFollowers, setFollowings } from "./features/connectionSlice";
 
 const baseURL = import.meta.env.VITE_API_URL || "/api";
 
@@ -34,68 +35,96 @@ function AppContent() {
   const dispatch = useDispatch();
 
   const user = useSelector((state) => state.user.user);
-  console.log("User: ", user);
+
   useEffect(() => {
     if (user) {
       localStorage.setItem("snapgram_user", JSON.stringify(user));
+    } else {
+      navigate("/login", { replace: true });
     }
   }, [user]);
+
+  const fetchConnections = async (token, username) => {
+    try {
+      const res = await axios.get(`${baseURL}/api/connections/${username}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const { followers, followings } = res.data;
+      dispatch(setFollowers(followers));
+      dispatch(setFollowings(followings));
+    } catch (error) {
+      console.error("Failed to fetch connections:", error);
+    }
+  };
+  const registerUser = async (profile, coords, token) => {
+    try {
+      const profilePicture =
+        profile.photoURL || "https://via.placeholder.com/150";
+
+      const res = await axios.post(
+        `${baseURL}/api/users/register`,
+        {
+          name: profile.displayName,
+          bio: "Using SnapGram 😎",
+          lat: coords.lat,
+          lng: coords.lng,
+          profilePicture: profilePicture,
+        },
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+      console.log("Logged-in: ", res.data);
+      return res.data;
+    } catch (error) {
+      console.log("Registration error");
+      throw error;
+    }
+  };
+  const getLocation = () => {
+    return new Promise((resolve, reject) => {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          resolve({
+            lat: position.coords.latitude,
+            lng: position.coords.longitude,
+          });
+        },
+        (error) => {
+          console.error("Geolocation error:", error);
+          reject(error);
+        }
+      );
+    });
+  };
 
   const signIn = async () => {
     try {
       const result = await signInWithPopup(auth, provider);
       const profile = result.user;
       const token = await profile.getIdToken();
-      //console.log("profile ", profile);
-      navigator.geolocation.getCurrentPosition(
-        async (position) => {
-          const coords = {
-            lat: position.coords.latitude,
-            lng: position.coords.longitude,
-          };
-          //console.log("User's location: [lat, lng]: ", coords);
-          const profilePicture =
-            profile.photoURL || "https://via.placeholder.com/150";
-          const res = await axios.post(
-            `${baseURL}/api/users/register`,
-            {
-              name: profile.displayName,
-              bio: "Using SnapGram 😎",
-              lat: coords.lat,
-              lng: coords.lng,
-              profilePicture: profilePicture,
-            },
-            {
-              headers: { Authorization: `Bearer ${token}` },
-            }
-          );
-          //console.log("User registered:", res.data);
-          // setUser({ ...res.data, token, coords });
-          dispatch(
-            setUser({
-              user: res.data,
-              token,
-              coords,
-            })
-          );
-          navigate("/explore");
-        },
-        (error) => {
-          console.error("Geolocation error:", error);
-          alert("Failed to get your location. Please allow location access.");
-        }
-      );
+
+      try {
+        const coords = await getLocation();
+        const userData = await registerUser(profile, coords, token);
+        await fetchConnections(token, userData.username);
+        dispatch(
+          setUser({
+            user: userData,
+            token,
+            coords,
+          })
+        );
+        navigate("/explore");
+      } catch (error) {
+        console.error("Error after authentication:", error);
+        alert("Failed to complete setup. Please try again.");
+      }
     } catch (error) {
       console.error("Error signing in:", error);
       alert("Failed to sign in. Please try again.");
     }
   };
-
-  useEffect(() => {
-    if (!user) {
-      navigate("/login", { replace: true });
-    }
-  }, []);
 
   return (
     <>
@@ -108,6 +137,15 @@ function AppContent() {
             <>
               <Navbar />
               <FindPeople />
+            </>
+          }
+        />
+        <Route
+          path="/connections/:username"
+          element={
+            <>
+              <Navbar />
+              <Connections />
             </>
           }
         />
@@ -138,15 +176,6 @@ function AppContent() {
               <>
                 <Navbar />
                 <UserProfile />
-              </>
-            }
-          />
-          <Route
-            path="/connections/:username"
-            element={
-              <>
-                <Navbar />
-                <Connections />
               </>
             }
           />

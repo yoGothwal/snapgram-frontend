@@ -5,7 +5,6 @@ import { useState } from "react";
 export default function SliderSizes({ setRadius }) {
   const [value, setValue] = useState(10);
   const handleChange = (event, newValue) => {
-    console.log("setting radius: ", newValue);
     setValue(newValue);
     setRadius(newValue);
   };

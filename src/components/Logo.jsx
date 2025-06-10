@@ -47,10 +47,10 @@ const Content = () => {
           headers: { Authorization: `Bearer ${token}` },
         }
       );
-      navigate(`/users/${n.from.username}`);
+      navigate(`/${n.from.username}`);
     } catch (err) {
       console.error("Error marking notification as seen:", err);
-      navigate(`/users/${n.from.username}`); // fallback
+      navigate(`/${n.from.username}`); // fallback
     }
   };
   const openChat = () => {
