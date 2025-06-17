@@ -13,7 +13,7 @@ const Content = () => {
   const [notifications, setNotifications] = useState([]);
   const navigate = useNavigate();
   const user = useSelector((state) => state.user.user);
-
+  const a = 0;
   const fetchNotifications = async () => {
     try {
       const res = await axios.get(`${baseURL}/api/users/notifications`, {
