@@ -21,6 +21,9 @@ import {
   Mood as MoodIcon,
   MoreVert as MoreVertIcon,
 } from "@mui/icons-material";
+import axios from "axios";
+import ImageMessage from "../components/ImageMessage";
+const baseURL = import.meta.env.VITE_API_URL || "/api";
 
 const UserChat = () => {
   const { username } = useParams();
@@ -33,6 +36,15 @@ const UserChat = () => {
   const inputFileRef = useRef();
   const [socket, setSocket] = useState(null);
   const [isConnected, setIsConnected] = useState(false);
+
+  const ALLOWED_IMAGE_TYPES = [
+    "image/jpeg",
+    "image/png",
+    "image/webp",
+    "image/gif",
+  ];
+  const MAX_IMAGE_SIZE = 10 * 1024 * 1024; //10mb
+  const [selectedImage, setSelectedImage] = useState(null);
 
   useEffect(() => {
     if (!currentUser) {
@@ -100,34 +112,48 @@ const UserChat = () => {
     };
   }, [currentUser, username]);
 
-  const handleSendMessage = useCallback(() => {
-    if (!newMessage.trim()) {
-      console.log("Empty message, not sending");
+  const uploadImage = async (file) => {
+    const formData = new FormData();
+    formData.append("image", file);
+    try {
+      const res = await axios.post(`${baseURL}/upload`, formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+        withCredentials: true,
+      });
+      console.log(res);
+      return res.data.imageUrl;
+    } catch (e) {
+      console.error("Upload failed", e);
+      alert("failed to upload image");
+      return null;
+    }
+  };
+  const handleSendMessage = useCallback(async () => {
+    if (!socket || socket.readyState !== WebSocket.OPEN || !currentUser) {
       return;
     }
-    if (!socket || socket.readyState !== WebSocket.OPEN) {
-      console.log("WebSocket not ready, current state:", socket?.readyState);
-      return;
-    }
-    if (!currentUser) {
-      console.log("No current user, cannot send");
-      return;
-    }
-
+    const msg = { type: "message", to: username };
     console.log(`Sending message to ${username}:`, newMessage);
     try {
-      socket.send(
-        JSON.stringify({
-          type: "message",
-          to: username,
-          text: newMessage,
-        })
-      );
-      setNewMessage("");
-    } catch (err) {
-      console.error("Error sending message:", err);
+      if (selectedImage) {
+        const imageUrl = await uploadImage(selectedImage.file);
+        console.log(imageUrl);
+        if (!imageUrl) return;
+        socket.send(JSON.stringify({ ...msg, imageUrl }));
+        setSelectedImage(null);
+      }
+      if (newMessage.trim() && !selectedImage) {
+        socket.send(JSON.stringify({ ...msg, text: newMessage }));
+        setNewMessage("");
+      }
+      console.log("Message sent successfully");
+    } catch (error) {
+      alert("Message failed");
+      console.error("Error in sending message: ", error);
     }
-  }, [newMessage, socket, username, currentUser]);
+  }, [newMessage, socket, username, currentUser, selectedImage]);
 
   const handleKeyPress = (e) => {
     if (e.key === "Enter" && !e.shiftKey) {
@@ -138,6 +164,13 @@ const UserChat = () => {
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
+  useEffect(() => {
+    const oldPreview = selectedImage?.preview;
+
+    return () => {
+      if (oldPreview) URL.revokeObjectURL(oldPreview);
+    };
+  }, [selectedImage]);
 
   return (
     <Box
@@ -236,23 +269,48 @@ const UserChat = () => {
                   sx={{
                     ml: message.sender === "me" ? 0 : 1,
                     mr: message.sender === "me" ? 1 : 0,
-                    maxWidth: "70%",
+                    maxWidth: message.imageUrl ? "30%" : "70%",
                   }}
                   primary={
                     <Paper
                       elevation={0}
                       sx={{
                         p: 1.5,
+                        border: message.imageUrl ? "2px solid #e4e6eb" : "none",
                         borderRadius:
                           message.sender === "me"
                             ? "18px 18px 0 18px"
                             : "18px 18px 18px 0",
-                        bgcolor: message.sender === "me" ? "black" : "#e4e6eb",
+                        bgcolor: message.imageUrl
+                          ? "transparent"
+                          : message.sender === "me"
+                            ? "black"
+                            : "#e4e6eb",
                         color: message.sender === "me" ? "white" : "black",
                         wordBreak: "break-word",
+
+                        cursor: "pointer",
                       }}
                     >
-                      {message.text}
+                      <Typography
+                        component="div"
+                        color={message.sender === "me" ? "white" : "black"}
+                      >
+                        {message.text}
+                        {message.imageUrl && (
+                          <Box
+                            sx={{
+                              display: "flex",
+                              justifyContent:
+                                message.sender === "me"
+                                  ? "flex-end"
+                                  : "flex-start",
+                            }}
+                          >
+                            <ImageMessage imageUrl={message.imageUrl} />
+                          </Box>
+                        )}
+                      </Typography>
                     </Paper>
                   }
                   secondary={
@@ -291,10 +349,54 @@ const UserChat = () => {
           borderRadius: 0,
         }}
       >
+        {
+          /* image preview thumbnail */
+          selectedImage && (
+            <Box
+              sx={{
+                position: "relative",
+                width: "fit-content",
+                mx: "auto",
+                mb: 1,
+                border: "1px solid #e0e0e0",
+                borderRadius: "8px",
+              }}
+            >
+              <img
+                src={selectedImage.preview}
+                alt="Preview"
+                style={{
+                  maxWidth: "50px",
+                  maxHeight: "50px",
+                  display: "block",
+                  borderRadius: "8px",
+                }}
+              ></img>
+              <Box
+                onClick={() => {
+                  URL.revokeObjectURL(selectedImage.preview); //cleans memory used by url
+                  setSelectedImage(null);
+                }}
+                sx={{
+                  // fontSize: "5px",
+                  position: "absolute",
+                  top: 0,
+                  right: 4,
+                  cursor: "pointer",
+                  color: "black",
+                  backgroundColor: "white",
+                }}
+              >
+                ✕
+              </Box>
+            </Box>
+          )
+        }
         <Box sx={{ display: "flex", alignItems: "center", px: 1, mr: 1 }}>
           <IconButton>
             <MoodIcon />
           </IconButton>
+
           <input
             type="file"
             accept="image/*"
@@ -305,11 +407,25 @@ const UserChat = () => {
               if (file) {
                 console.log("File selected: ", file.name, file.type, file.size);
               }
+              if (!ALLOWED_IMAGE_TYPES.includes(file.type)) {
+                alert("Please provide valid image format");
+                return;
+              }
+              if (file.size > MAX_IMAGE_SIZE) {
+                alert("Image size must be below 10mb");
+                return;
+              }
+              setSelectedImage({
+                file,
+                preview: URL.createObjectURL(file),
+              });
+              console.log("Valid image selected");
             }}
           ></input>
           <IconButton onClick={() => inputFileRef.current.click()}>
             <AttachFileIcon />
           </IconButton>
+
           <TextField
             fullWidth
             variant="outlined"
@@ -328,11 +444,11 @@ const UserChat = () => {
               },
             }}
           />
-          {newMessage ? (
+          {newMessage || selectedImage ? (
             <IconButton
               color="primary"
               onClick={handleSendMessage}
-              disabled={!newMessage.trim() || !isConnected}
+              disabled={(!newMessage.trim() && !selectedImage) || !isConnected}
             >
               <SendIcon />
             </IconButton>

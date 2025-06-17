@@ -131,26 +131,6 @@ const Profile = () => {
                 border: "2px solid #000",
               }}
             />
-            <IconButton
-              sx={{
-                position: "absolute",
-                bottom: 0,
-                right: 0,
-                backgroundColor: "black",
-                color: "white",
-                "&:hover": { backgroundColor: "#333" },
-              }}
-              onClick={() => fileInputRef.current.click()}
-            >
-              <PhotoCamera fontSize="small" />
-            </IconButton>
-            <input
-              type="file"
-              accept="image/*"
-              ref={fileInputRef}
-              style={{ display: "none" }}
-              onChange={handleImageChange}
-            />
           </Box>
 
           <Box
@@ -229,20 +209,6 @@ const Profile = () => {
       </ProfileCard>
 
       <Box sx={{ display: "flex", justifyContent: "center", mt: 2, gap: 2 }}>
-        {/* <Button
-          onClick={handleEditProfile}
-          variant="outlined"
-          sx={{
-            borderColor: "black",
-            color: "black",
-            "&:hover": {
-              borderColor: "black",
-              backgroundColor: "rgba(0,0,0,0.05)",
-            },
-          }}
-        >
-          EDIT PROFILE
-        </Button> */}
         <Button
           variant="contained"
           sx={{
