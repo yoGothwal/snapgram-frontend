@@ -55,7 +55,7 @@ const UserChat = () => {
     console.log(
       `Connecting to WebSocket for ${currentUser} chatting with ${username}`
     );
-    const ws = new WebSocket("ws://localhost:8080");
+    const ws = new WebSocket(import.meta.env.VITE_WS_URL);
     ws.onopen = () => {
       console.log("Connected to WebSocket");
       setIsConnected(true);
