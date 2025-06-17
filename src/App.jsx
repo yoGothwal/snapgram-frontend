@@ -102,6 +102,7 @@ function AppContent() {
       const token = await profile.getIdToken();
 
       try {
+        console.log(token)
         await axios.post(
           `${baseURL}/api/auth/sessionLogin`,
           { token },
