@@ -1,4 +1,3 @@
-import { useEffect } from "react";
 import {
   BrowserRouter as Router,
   Routes,
@@ -9,7 +8,7 @@ import {
 
 import { useDispatch } from "react-redux";
 import { setUser } from "./features/userSlice";
-
+import { useEffect } from "react";
 import Layout from "./components/Layout";
 import Navbar from "./components/NavBar";
 import ProfileEditForm from "./components/ProfileEditForm";
@@ -23,7 +22,7 @@ import UserChat from "./pages/UserChat";
 
 import { auth, provider, signInWithPopup } from "./firebase";
 import axios from "axios";
-import { useSelector } from "react-redux";
+
 import LoginPage from "./pages/LoginPage";
 import Connections from "./pages/Connections";
 import { setFollowers, setFollowings } from "./features/connectionSlice";
@@ -34,51 +33,26 @@ function AppContent() {
   const navigate = useNavigate();
   const dispatch = useDispatch();
 
-  const user = useSelector((state) => state.user.user);
-
   useEffect(() => {
-    if (user) {
-      localStorage.setItem("snapgram_user", JSON.stringify(user));
+    const savedUser = JSON.parse(localStorage.getItem("snapgram_user"));
+
+    if (savedUser) {
+      dispatch(setUser(savedUser));
     } else {
       navigate("/login", { replace: true });
     }
-  }, [user]);
+  }, [dispatch, navigate]);
 
-  const fetchConnections = async (token, username) => {
+  const fetchConnections = async (username) => {
     try {
       const res = await axios.get(`${baseURL}/api/connections/${username}`, {
-        headers: { Authorization: `Bearer ${token}` },
+        withCredentials: true,
       });
       const { followers, followings } = res.data;
       dispatch(setFollowers(followers));
       dispatch(setFollowings(followings));
     } catch (error) {
       console.error("Failed to fetch connections:", error);
-    }
-  };
-  const registerUser = async (profile, coords, token) => {
-    try {
-      const profilePicture =
-        profile.photoURL || "https://via.placeholder.com/150";
-
-      const res = await axios.post(
-        `${baseURL}/api/users/register`,
-        {
-          name: profile.displayName,
-          bio: "Using SnapGram 😎",
-          lat: coords.lat,
-          lng: coords.lng,
-          profilePicture: profilePicture,
-        },
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
-      console.log("Logged-in: ", res.data);
-      return res.data;
-    } catch (error) {
-      console.log("Registration error");
-      throw error;
     }
   };
   const getLocation = () => {
@@ -97,7 +71,30 @@ function AppContent() {
       );
     });
   };
+  const registerUser = async (profile, coords) => {
+    try {
+      const profilePicture =
+        profile.photoURL || "https://via.placeholder.com/150";
 
+      const res = await axios.post(
+        `${baseURL}/api/auth/register`,
+        {
+          name: profile.displayName,
+          bio: "Using SnapGram 😎",
+          lat: coords.lat,
+          lng: coords.lng,
+          profilePicture: profilePicture,
+        },
+        {
+          withCredentials: true,
+        }
+      );
+      return res.data;
+    } catch (error) {
+      console.log("Registration error");
+      throw error;
+    }
+  };
   const signIn = async () => {
     try {
       const result = await signInWithPopup(auth, provider);
@@ -105,16 +102,21 @@ function AppContent() {
       const token = await profile.getIdToken();
 
       try {
-        const coords = await getLocation();
-        const userData = await registerUser(profile, coords, token);
-        await fetchConnections(token, userData.username);
-        dispatch(
-          setUser({
-            user: userData,
-            token,
-            coords,
-          })
+        await axios.post(
+          `${baseURL}/api/auth/sessionLogin`,
+          { token },
+          { withCredentials: true }
         );
+        const coords = await getLocation();
+        const userData = await registerUser(profile, coords);
+        await fetchConnections(userData.username);
+        const user = {
+          user: userData,
+          coords,
+        };
+        dispatch(setUser(user));
+        localStorage.setItem("snapgram_user", JSON.stringify(user));
+        console.log("Logged-in: ", user);
         navigate("/explore");
       } catch (error) {
         console.error("Error after authentication:", error);
@@ -202,3 +204,80 @@ function App() {
 }
 
 export default App;
+
+// import React, { useEffect, useRef, useState } from "react";
+
+// const App = () => {
+//   const [time, setTime] = useState(0);
+//   const [inputVal, setInputVal] = useState("");
+//   const [on, setOn] = useState(false);
+//   const timeRef = useRef();
+//   const startTimer = () => {
+//     const val = parseInt(inputVal);
+
+//     const startTime = Date.now();
+//     const duration = val;
+
+//     localStorage.setItem("startTime", startTime);
+//     localStorage.setItem("duration", duration);
+
+//     clearInterval(timeRef.current);
+//     setTime(val);
+//     setOn(true);
+//     timeRef.current = setInterval(() => {
+//       const remaining = val - Math.floor((Date.now() - startTime) / 1000);
+//       if (remaining <= 0) {
+//         clearInterval(timeRef.current);
+//         localStorage.removeItem("duration");
+//         localStorage.removeItem("startTime");
+//         setTime(0);
+//       } else {
+//         setTime(remaining);
+//       }
+//     }, 1000);
+//   };
+//   useEffect(() => {
+//     const earlierStart = localStorage.getItem("startTime");
+//     const earlierDuration = localStorage.getItem("duration");
+//     if (earlierDuration && earlierStart) {
+//       const remaining =
+//         parseInt(earlierDuration) -
+//         Math.floor((Date.now() - parseInt(earlierStart)) / 1000);
+//       if (remaining > 0) {
+//         setTime(remaining);
+//         setOn(true);
+//         timeRef.current = setInterval(() => {
+//           const remainingNow =
+//             parseInt(earlierDuration) -
+//             Math.floor((Date.now() - parseInt(earlierStart)) / 1000);
+//           if (remainingNow <= 0) {
+//             clearInterval(timeRef.current);
+//             setTime(0);
+//             localStorage.removeItem("duration");
+//             localStorage.removeItem("startTime");
+//           } else {
+//             setTime(remainingNow);
+//           }
+//         }, 1000);
+//       } else {
+//         localStorage.removeItem("duration");
+//         localStorage.removeItem("startTime");
+//         setTime(0);
+//       }
+//     }
+//   }, []);
+//   return (
+//     <div>
+//       <h2>{on && time === 0 ? "Time's up" : time}</h2>
+//       <input
+//         type="text"
+//         placeholder="enter seconds"
+//         value={inputVal}
+//         onChange={(e) => setInputVal(e.target.value)}
+//       />
+//       <button onClick={startTimer}>Start</button>
+//     </div>
+//   );
+// };
+
+// export default App;

@@ -1,10 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import axios from "axios";
-import { NoBgSx } from "../sx/styles";
-import RefreshIcon from "@mui/icons-material/Refresh";
 import GpsNotFixedIcon from "@mui/icons-material/GpsNotFixed";
 import GpsFixedIcon from "@mui/icons-material/GpsFixed";
-import PersonAddIcon from "@mui/icons-material/PersonAdd";
 import SearchIcon from "@mui/icons-material/Search";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import ExpandLessIcon from "@mui/icons-material/ExpandLess";
@@ -29,21 +26,24 @@ import {
   Collapse,
 } from "@mui/material";
 import { useNavigate } from "react-router-dom";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
+import { setUser } from "../features/userSlice";
 const baseURL = import.meta.env.VITE_API_URL || "/api";
 
 const FindPeople = () => {
-  const user = useSelector((state) => state.user.user);
-  const token = useSelector((state) => state.user.token);
+  const user =
+    useSelector((state) => state.user.user) ||
+    JSON.parse(localStorage.getItem("snapgram_user"));
   const coords = useSelector((state) => state.user.coords);
-
   const navigate = useNavigate();
   const [nearby, setNearby] = useState([]);
   const [loading, setLoading] = useState(false);
   const [gpsOn, setGpsOn] = useState(false);
   const [radius, setRadius] = useState(10);
   const debouncedRadius = useDebounce(radius, 500);
+  console.log(user);
+  const dispatch = useDispatch();
 
   const [searchQuery, setSearchQuery] = useState("");
   const [showFilters, setShowFilters] = useState(false);
@@ -66,9 +66,7 @@ const FindPeople = () => {
       const delay = new Promise((resolve) => setTimeout(resolve, 1000));
       const apiCall = axios.get(
         `${baseURL}/api/users/nearby?lat=${lat}&lng=${lng}&radius=${debouncedRadius}`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
+        { withCredentials: true }
       );
       const [res] = await Promise.all([apiCall, delay]);
 
@@ -88,13 +86,8 @@ const FindPeople = () => {
     fetchNearby();
   }, [debouncedRadius]);
 
-  useEffect(() => {
-    if (gpsOn && !coords) {
-      const interval = setInterval(updateLocation, 30000);
-      return () => clearInterval(interval);
-    }
-  }, [gpsOn]);
   const updateLocation = async () => {
+    console.log("updating...");
     if (!navigator.geolocation) {
       alert("Geolocation is not supported by your browser");
       return;
@@ -104,16 +97,18 @@ const FindPeople = () => {
       async (position) => {
         const lat = position.coords.latitude;
         const lng = position.coords.longitude;
+        console.log(lat, lng);
         try {
           await axios.put(
             `${baseURL}/api/users/update-location`,
             { lat, lng },
             {
-              headers: { Authorization: `Bearer ${token}` },
+              withCredentials: true,
             }
           );
           setGpsOn(true);
-          user.coords = { lat, lng };
+          dispatch(setUser({ ...user, coords: { lat, lng } }));
+          // user.coords = { lat, lng };
           fetchNearby();
         } catch (err) {
           console.error("Location update failed:", err);
@@ -127,6 +122,12 @@ const FindPeople = () => {
       { enableHighAccuracy: true }
     );
   };
+  useEffect(() => {
+    if (gpsOn) {
+      const interval = setInterval(updateLocation, 3000);
+      return () => clearInterval(interval);
+    }
+  }, [gpsOn]);
   const handlePersonClick = (u) => {
     console.log("clicked");
     navigate(`/${u.username}`);
@@ -134,7 +135,7 @@ const FindPeople = () => {
 
   const filteredUsers = nearby
     ? nearby.filter((u) => {
-        const isNotCurrentUser = u._id !== user?._id;
+        const isNotCurrentUser = u.username !== user?.username;
         const matchesSearch = searchQuery
           ? u.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
             u.username?.toLowerCase().includes(searchQuery.toLowerCase())
@@ -298,7 +299,7 @@ const FindPeople = () => {
             </Typography>
           )}
           {filteredUsers
-            .filter((u) => u._id != user._id)
+            // .filter((u) => u._id != user?._id)
             .map((u) => (
               <ListItem
                 key={u.uid}
@@ -327,11 +328,13 @@ const FindPeople = () => {
                     </Typography>
                   }
                   secondary={
-                    <>
-                      <Typography variant="body2" sx={{ color: "#555" }}>
-                        @{u.username}
-                      </Typography>
-                    </>
+                    <Typography
+                      variant="body2"
+                      sx={{ color: "#555" }}
+                      component="div"
+                    >
+                      @{u.username}
+                    </Typography>
                   }
                 />
               </ListItem>

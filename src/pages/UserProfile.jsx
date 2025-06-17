@@ -1,329 +1,3 @@
-// import { useNavigate, useParams } from "react-router-dom";
-// import {
-//   Box,
-//   Avatar,
-//   Typography,
-//   Paper,
-//   Button,
-//   Snackbar,
-//   Alert,
-//   Grid,
-// } from "@mui/material";
-// import { useEffect, useState } from "react";
-// import axios from "axios";
-// import { useSelector } from "react-redux";
-// import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
-
-// const baseURL = import.meta.env.VITE_API_URL || "/api";
-
-// // Helper function to format numbers
-// const formatNumber = (num) => {
-//   if (num >= 1000000) {
-//     return (num / 1000000).toFixed(1) + "m";
-//   }
-//   if (num >= 1000) {
-//     return (num / 1000).toFixed(1) + "k";
-//   }
-//   return num.toString();
-// };
-
-// const Item = ({ children }) => {
-//   return (
-//     <Paper
-//       elevation={0}
-//       sx={{
-//         px: 2,
-//         height: "100%",
-//         boxSizing: "border-box",
-//       }}
-//     >
-//       {children}
-//     </Paper>
-//   );
-// };
-
-// const UserProfile = () => {
-//   const navigate = useNavigate();
-//   const user = useSelector((state) => state.user.user);
-//   const token = useSelector((state) => state.user.token);
-//   const [fetchedUser, setFetchedUser] = useState(null);
-//   const { username } = useParams();
-
-//   const [isFollowing, setIsFollowing] = useState(false);
-
-//   console.log("Fetched user: ", fetchedUser);
-//   const [notification, setNotification] = useState({
-//     open: false,
-//     message: "",
-//     severity: "success",
-//   });
-
-//   const fetchUser = async () => {
-//     try {
-//       const res = await axios.get(`${baseURL}/api/users/${username}`, {
-//         headers: { Authorization: `Bearer ${token}` },
-//       });
-//       const u = res.data;
-//       console.log(u);
-//       setFetchedUser(u);
-//       // Check if current user is following this user
-//       setIsFollowing(u.isFollowing);
-//     } catch (error) {
-//       console.error("Error fetching user:", error);
-//     }
-//   };
-
-//   useEffect(() => {
-//     if (user) {
-//       // Only fetch if user is available
-//       fetchUser();
-//     }
-//   }, [username, user]);
-
-//   // Sometimes you have are setting useState to null. Then it might be possible that it will show error in starting. Like const [v,setV] = useState(null)
-//   // Then you need something like if(!v) return <p> loading<p></p>
-//   if (!user || !fetchedUser) return null;
-
-//   const handleFollow = async () => {
-//     try {
-//       await axios.post(
-//         `${baseURL}/api/users/follow/${fetchedUser.user._id}`,
-//         {},
-//         {
-//           headers: { Authorization: `Bearer ${token}` },
-//         }
-//       );
-//       setIsFollowing(true);
-//       // Update the local state to reflect the new follower
-//       setFetchedUser((prev) => ({
-//         ...prev,
-//         isFollowing: true,
-//       }));
-//       setNotification({
-//         open: true,
-//         message: `You are now following ${fetchedUser.user.username}`,
-//         severity: "success",
-//       });
-//     } catch (error) {
-//       console.error("Error following user:", error);
-//       setNotification({
-//         open: true,
-//         message: `Failed to follow user`,
-//         severity: "error",
-//       });
-//     }
-//   };
-
-//   const handleUnfollow = async () => {
-//     try {
-//       await axios.post(
-//         `${baseURL}/api/users/unfollow/${fetchedUser.user._id}`,
-//         {},
-//         {
-//           headers: { Authorization: `Bearer ${token}` },
-//         }
-//       );
-//       setIsFollowing(false);
-//       // Update the local state to remove the follower
-//       setFetchedUser((prev) => ({
-//         ...prev,
-//         isFollowing: false, // Fixed typo: was set to true
-//       }));
-//       setNotification({
-//         open: true,
-//         message: `Unfollowed ${fetchedUser.user.username}`,
-//         severity: "success",
-//       });
-//     } catch (error) {
-//       console.error("Error unfollowing user:", error);
-//       setNotification({
-//         open: true,
-//         message: `Failed to unfollow user`,
-//         severity: "error",
-//       });
-//     }
-//   };
-
-//   const handleChatClick = () => {
-//     console.log("clicked chat");
-//     navigate(`/chat/${fetchedUser.user.username}`);
-//   };
-
-//   return (
-//     <Box sx={{ justifyContent: "center" }}>
-//       <Grid container spacing={0} sx={{ mt: 4 }}>
-//         <Grid item xs={12} md={6}>
-//           <Item>
-//             <Box sx={{ display: "flex", gap: 4, mt: 2 }}>
-//               <Box sx={{ gap: 1, display: "flex", flexDirection: "column" }}>
-//                 <Avatar
-//                   src={
-//                     fetchedUser.user.profilePicture || "/src/images/user_dp.png"
-//                   }
-//                   alt="Profile"
-//                   sx={{
-//                     width: 60,
-//                     height: 60,
-//                     mb: 1,
-//                   }}
-//                 />
-//               </Box>
-//               <Box sx={{ display: "flex", gap: 2, mt: 2 }}>
-//                 <Box
-//                   sx={{
-//                     display: "flex",
-//                     flexDirection: "column",
-//                     minWidth: 60,
-//                   }}
-//                 >
-//                   <Typography variant="body2" fontWeight="bold">
-//                     {formatNumber(fetchedUser.user.postsCount || 0)}
-//                   </Typography>
-//                   <Typography variant="body2">posts</Typography>
-//                 </Box>
-//                 <Box
-//                   sx={{
-//                     display: "flex",
-//                     flexDirection: "column",
-//                     minWidth: 60,
-//                   }}
-//                 >
-//                   <Typography variant="body2" fontWeight="bold">
-//                     {formatNumber(fetchedUser.user.followersCount || 0)}
-//                   </Typography>
-//                   <Typography variant="body2">followers</Typography>
-//                 </Box>
-//                 <Box
-//                   sx={{
-//                     display: "flex",
-//                     flexDirection: "column",
-//                     minWidth: 60,
-//                   }}
-//                 >
-//                   <Typography variant="body2" fontWeight="bold">
-//                     {formatNumber(fetchedUser.user.followingCount || 0)}
-//                   </Typography>
-//                   <Typography variant="body2">following</Typography>
-//                 </Box>
-//               </Box>
-//             </Box>
-//           </Item>
-//         </Grid>
-
-//         <Grid item xs={12}>
-//           <Item>
-//             <Box sx={{ display: "flex" }}>
-//               <Typography
-//                 variant="body1"
-//                 sx={{
-//                   fontWeight: "bold",
-//                   fontFamily: "'Pacifico', cursive",
-//                   mb: 1,
-//                 }}
-//               >
-//                 {fetchedUser.user.name}
-//               </Typography>
-//             </Box>
-//             <Typography
-//               variant="body2"
-//               sx={{ color: "#555", fontStyle: "italic", mb: 0 }}
-//             >
-//               {fetchedUser.user.bio || "No bio yet"}
-//             </Typography>
-//             <Typography
-//               variant="body2"
-//               sx={{ color: "#232526", fontWeight: "bold" }}
-//             >
-//               @{fetchedUser.user.username}
-//             </Typography>
-//           </Item>
-//         </Grid>
-//       </Grid>
-
-//       <Box sx={{ display: "flex", justifyContent: "center", mt: 2, px: 2 }}>
-//         {isFollowing ? (
-//           <Box sx={{ display: "flex", gap: 2, width: "100%", maxWidth: 400 }}>
-//             <Button
-//               onClick={handleUnfollow}
-//               variant="outlined"
-//               fullWidth
-//               sx={{
-//                 color: "black",
-//                 borderColor: "black",
-//                 border: 2,
-//                 borderRadius: 2,
-//                 fontWeight: "bold",
-//               }}
-//             >
-//               Unfollow
-//             </Button>
-//             <Button
-//               onClick={handleChatClick}
-//               variant="outlined"
-//               fullWidth
-//               sx={{
-//                 color: "black",
-//                 borderRadius: 2,
-//                 borderColor: "black",
-//                 border: 2,
-//                 fontWeight: "bold",
-//               }}
-//             >
-//               Message
-//             </Button>
-//           </Box>
-//         ) : (
-//           <Button
-//             onClick={handleFollow}
-//             variant="contained"
-//             color="primary"
-//             fullWidth
-//             sx={{
-//               fontWeight: "bold",
-//               borderRadius: 2,
-//               maxWidth: 400,
-//             }}
-//           >
-//             Follow
-//           </Button>
-//         )}
-//       </Box>
-
-//       {/* Instagram-style photo grid */}
-//       <Grid container spacing={1} sx={{ mt: 4, px: 1 }}>
-//         {Array(9)
-//           .fill(null)
-//           .map((_, index) => (
-//             <Grid item xs={4} key={index}>
-//               <Box
-//                 sx={{
-//                   aspectRatio: "1/1",
-//                   backgroundColor: "black",
-//                   width: "100%",
-//                   display: "flex",
-//                   alignItems: "center",
-//                   justifyContent: "center",
-//                   color: "white",
-//                 }}
-//               >
-//                 <Typography>Photo {index + 1}</Typography>
-//               </Box>
-//             </Grid>
-//           ))}
-//       </Grid>
-
-//       <Snackbar
-//         open={notification.open}
-//         autoHideDuration={3000}
-//         onClose={() => setNotification({ ...notification, open: false })}
-//       >
-//         <Alert severity={notification.severity}>{notification.message}</Alert>
-//       </Snackbar>
-//     </Box>
-//   );
-// };
-
-// export default UserProfile;
 import { useNavigate, useParams } from "react-router-dom";
 import {
   Box,
@@ -336,7 +10,6 @@ import {
   Grid,
   Divider,
   IconButton,
-  Tooltip,
 } from "@mui/material";
 import { useEffect, useState } from "react";
 import axios from "axios";
@@ -352,9 +25,6 @@ const ProfileCard = ({ children }) => {
       elevation={0}
       sx={{
         p: 2,
-        // border: "1px solid #e0e0e0",
-        // borderRadius: "8px",
-        // backgroundColor: "transparent",
       }}
     >
       {children}
@@ -380,7 +50,6 @@ const UserProfile = () => {
   const navigate = useNavigate();
 
   const user = useSelector((state) => state.user.user);
-  const token = useSelector((state) => state.user.token);
 
   const followings = useSelector((state) => state.connection.followings);
 
@@ -396,7 +65,7 @@ const UserProfile = () => {
   const fetchUser = async () => {
     try {
       const res = await axios.get(`${baseURL}/api/users/${username}`, {
-        headers: { Authorization: `Bearer ${token}` },
+        withCredentials: true,
       });
       const u = res.data;
       console.log("Fetched user", res.data);
@@ -415,30 +84,21 @@ const UserProfile = () => {
     if (user) {
       fetchUser();
     }
-  }, [username, user]);
+  }, []);
 
   if (!user || !fetchedUser) return null;
 
   const handleFollow = async () => {
     try {
-      await axios.post(
-        `${baseURL}/api/users/follow/${fetchedUser.user._id}`,
-        {},
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
+      await axios.post(`${baseURL}/api/users/follow/${fetchedUser.user._id}`, {
+        withCredentials: true,
+      });
       await fetchUser();
       const updatedFollowings = [...followings, fetchedUser.user];
       dispatch(setFollowings(updatedFollowings));
       setIsFollowing(true);
-      // setCount({
-      //   flwrCount: flwrCount + 1,
-      //   flwnCount,
-      // });
       setFetchedUser((prev) => ({
         ...prev,
-
         isFollowing: true,
       }));
       setNotification({
@@ -459,9 +119,8 @@ const UserProfile = () => {
     try {
       await axios.post(
         `${baseURL}/api/users/unfollow/${fetchedUser.user._id}`,
-        {},
         {
-          headers: { Authorization: `Bearer ${token}` },
+          withCredentials: true,
         }
       );
       await fetchUser();
@@ -470,10 +129,6 @@ const UserProfile = () => {
       );
       dispatch(setFollowings(updatedFollowings));
       setIsFollowing(false);
-      // setCount({
-      //   flwrCount: flwrCount - 1,
-      //   flwnCount,
-      // });
       setFetchedUser((prev) => ({
         ...prev,
         isFollowing: false,
@@ -675,8 +330,24 @@ const UserProfile = () => {
         open={notification.open}
         autoHideDuration={3000}
         onClose={() => setNotification({ ...notification, open: false })}
+        sx={{
+          position: "fixed",
+          top: "50%",
+          left: "50%",
+          transform: "translate(-50%, -50%)",
+          zIndex: 1400, // above modals
+          backgroundColor: "transparent",
+        }}
       >
-        <Alert severity={notification.severity}>{notification.message}</Alert>
+        <Alert
+          severity={notification.severity}
+          sx={{
+            backgroundColor: "rgba(0, 0, 0, 0.7)",
+            color: "white",
+          }}
+        >
+          {notification.message}
+        </Alert>
       </Snackbar>
     </Box>
   );

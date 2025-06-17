@@ -12,7 +12,6 @@ const EditProfile = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const user = useSelector((state) => state.user.user);
-  const token = useSelector((state) => state.user.token);
 
   const coords = useSelector((state) => state.user.coords);
 
@@ -52,7 +51,7 @@ const EditProfile = () => {
         `${baseURL}/api/users/${user.username}`,
         form,
         {
-          headers: { Authorization: `Bearer ${token}` },
+          withCredentials: true,
         }
       );
       console.log(res.data);
@@ -60,7 +59,6 @@ const EditProfile = () => {
       dispatch(
         setUser({
           user: newUser,
-          token,
           coords,
         })
       );

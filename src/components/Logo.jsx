@@ -13,12 +13,11 @@ const Content = () => {
   const [notifications, setNotifications] = useState([]);
   const navigate = useNavigate();
   const user = useSelector((state) => state.user.user);
-  const token = useSelector((state) => state.user.token);
 
   const fetchNotifications = async () => {
     try {
       const res = await axios.get(`${baseURL}/api/users/notifications`, {
-        headers: { Authorization: `Bearer ${token}` },
+        withCredentials: true,
       });
       setNotifications(res.data);
     } catch (e) {
@@ -40,13 +39,9 @@ const Content = () => {
   const handleNotificationClick = async (n) => {
     setAnchorEl(null);
     try {
-      await axios.put(
-        `${baseURL}/api/users/notifications/${n._id}/seen`,
-        {},
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
+      await axios.put(`${baseURL}/api/users/notifications/${n._id}/seen`, {
+        withCredentials: true,
+      });
       navigate(`/${n.from.username}`);
     } catch (err) {
       console.error("Error marking notification as seen:", err);

@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import {
@@ -9,11 +9,11 @@ import {
   TextField,
   IconButton,
   List,
-  ListItem,
   ListItemAvatar,
   ListItemText,
   Badge,
 } from "@mui/material";
+import { useSelector } from "react-redux";
 import {
   Send as SendIcon,
   AttachFile as AttachFileIcon,
@@ -22,47 +22,112 @@ import {
   MoreVert as MoreVertIcon,
 } from "@mui/icons-material";
 
-// Mock messages - in a real app these would come from an API
-const mockMessages = [
-  { id: 1, sender: "them", text: "Hey there!", time: "10:30 AM" },
-  { id: 2, sender: "me", text: "Hi! How are you?", time: "10:32 AM" },
-  {
-    id: 3,
-    sender: "them",
-    text: "I'm good, thanks for asking. How about you?",
-    time: "10:33 AM",
-  },
-  {
-    id: 4,
-    sender: "me",
-    text: "Doing well! Just working on some projects.",
-    time: "10:35 AM",
-  },
-];
-
 const UserChat = () => {
   const { username } = useParams();
-  const [messages, setMessages] = useState(mockMessages);
+  const currentUser = useSelector((state) => state.user.user?.username);
+
+  const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState("");
   const messagesEndRef = useRef(null);
   const navigate = useNavigate();
+  const inputFileRef = useRef();
+  const [socket, setSocket] = useState(null);
+  const [isConnected, setIsConnected] = useState(false);
 
-  const handleSendMessage = () => {
-    if (newMessage.trim() === "") return;
+  useEffect(() => {
+    if (!currentUser) {
+      console.log("No current user, skipping WebSocket connection");
+      return;
+    }
 
-    const message = {
-      id: messages.length + 1,
-      sender: "me",
-      text: newMessage,
-      time: new Date().toLocaleTimeString([], {
-        hour: "2-digit",
-        minute: "2-digit",
-      }),
+    console.log(
+      `Connecting to WebSocket for ${currentUser} chatting with ${username}`
+    );
+    const ws = new WebSocket("ws://localhost:8080");
+    ws.onopen = () => {
+      console.log("Connected to WebSocket");
+      setIsConnected(true);
+      ws.send(
+        JSON.stringify({
+          type: "login",
+          username: currentUser,
+        })
+      );
+      ws.send(
+        JSON.stringify({
+          type: "get_history",
+          withUser: username,
+        })
+      );
     };
 
-    setMessages([...messages, message]);
-    setNewMessage("");
-  };
+    ws.onclose = () => {
+      console.log("Websocket disconnected");
+      setIsConnected(false);
+    };
+
+    ws.onerror = (error) => {
+      console.log("Websocket Error: ", error);
+    };
+
+    ws.onmessage = (event) => {
+      console.log("Received message:", event.data);
+
+      const data = JSON.parse(event.data);
+      if (data.type === "message") {
+        console.log("new message recieved:", data.payload);
+        setMessages((prev) => [
+          ...prev,
+          {
+            ...data.payload,
+            sender: data.payload.sender === currentUser ? "me" : "them",
+          },
+        ]);
+      } else if (data.type === "history") {
+        console.log("history recieved:", data.payload);
+        setMessages(
+          data.payload.map((msg) => ({
+            ...msg,
+            sender: msg.sender === currentUser ? "me" : "them",
+          }))
+        );
+      }
+    };
+    setSocket(ws);
+    return () => {
+      console.log("Cleaning up WebSocket");
+      ws.close();
+    };
+  }, [currentUser, username]);
+
+  const handleSendMessage = useCallback(() => {
+    if (!newMessage.trim()) {
+      console.log("Empty message, not sending");
+      return;
+    }
+    if (!socket || socket.readyState !== WebSocket.OPEN) {
+      console.log("WebSocket not ready, current state:", socket?.readyState);
+      return;
+    }
+    if (!currentUser) {
+      console.log("No current user, cannot send");
+      return;
+    }
+
+    console.log(`Sending message to ${username}:`, newMessage);
+    try {
+      socket.send(
+        JSON.stringify({
+          type: "message",
+          to: username,
+          text: newMessage,
+        })
+      );
+      setNewMessage("");
+    } catch (err) {
+      console.error("Error sending message:", err);
+    }
+  }, [newMessage, socket, username, currentUser]);
 
   const handleKeyPress = (e) => {
     if (e.key === "Enter" && !e.shiftKey) {
@@ -70,8 +135,6 @@ const UserChat = () => {
       handleSendMessage();
     }
   };
-
-  // Auto-scroll to bottom when messages change
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
@@ -82,6 +145,7 @@ const UserChat = () => {
         display: "flex",
         flexDirection: "column",
         height: "auto",
+        mb: 5,
         bgcolor: "white",
       }}
     >
@@ -119,11 +183,14 @@ const UserChat = () => {
           <Typography variant="subtitle1" fontWeight="bold">
             {username}
           </Typography>
-          <Typography variant="caption" color="text.secondary">
-            Online
+          <Typography
+            variant="caption"
+            color={isConnected ? "success.main" : "error.main"}
+          >
+            {isConnected ? "online" : "connecting..."}
           </Typography>
         </Box>
-        <Box sx={{ p: 1, mr: 1 }}>
+        <Box sx={{ p: 1, mr: 2 }}>
           <MoreVertIcon />
         </Box>
       </Paper>
@@ -132,74 +199,81 @@ const UserChat = () => {
       <Box
         sx={{
           flexGrow: 1,
+          mt: 6,
+          mb: 2,
           overflowY: "auto",
-          p: 2,
+
           backgroundImage:
             'url("https://web.whatsapp.com/img/bg-chat-tile-light_a4be512e7195b6b733d9110b408f075d.png")',
           backgroundRepeat: "repeat",
-          mt: 4,
         }}
       >
         <List sx={{ width: "100%", maxWidth: "800px", mx: "auto" }}>
-          {messages.map((message) => (
-            <ListItem
-              key={message.id}
-              sx={{
-                display: "flex",
-                flexDirection: message.sender === "me" ? "row-reverse" : "row",
-                alignItems: "flex-start",
-                px: 1,
-                py: 0.5,
-              }}
-            >
-              {message.sender === "them" && (
-                <ListItemAvatar sx={{ minWidth: 40, alignSelf: "flex-end" }}>
-                  <Avatar
-                    alt={username}
-                    src={`https://i.pravatar.cc/150?u=${username}`}
-                    sx={{ width: 32, height: 32 }}
-                  />
-                </ListItemAvatar>
-              )}
-              <ListItemText
+          {messages.map((message, id) => {
+            const nextMessage = messages[id + 1];
+            const showTime = !nextMessage || message.time !== nextMessage.time;
+            return (
+              <Box
+                key={message.id}
                 sx={{
-                  ml: message.sender === "me" ? 0 : 1,
-                  mr: message.sender === "me" ? 1 : 0,
-                  maxWidth: "70%",
+                  display: "flex",
+                  flexDirection:
+                    message.sender === "me" ? "row-reverse" : "row",
+                  alignItems: "flex-start",
+                  px: 1,
                 }}
-                primary={
-                  <Paper
-                    elevation={0}
-                    sx={{
-                      p: 1.5,
-                      borderRadius:
-                        message.sender === "me"
-                          ? "18px 18px 0 18px"
-                          : "18px 18px 18px 0",
-                      bgcolor: message.sender === "me" ? "#0084ff" : "#e4e6eb",
-                      color: message.sender === "me" ? "white" : "black",
-                      wordBreak: "break-word",
-                    }}
-                  >
-                    {message.text}
-                  </Paper>
-                }
-                secondary={
-                  <Typography
-                    variant="caption"
-                    sx={{
-                      display: "block",
-                      textAlign: message.sender === "me" ? "right" : "left",
-                      color: "text.secondary",
-                      mt: 0.5,
-                    }}
-                  >
-                    {message.time}
-                  </Typography>
-                }
-              />
-            </ListItem>
-          ))}
+              >
+                {message.sender === "them" && (
+                  <ListItemAvatar sx={{ minWidth: 40, alignSelf: "flex-end" }}>
+                    <Avatar
+                      alt={username}
+                      src={`https://i.pravatar.cc/150?u=${username}`}
+                      sx={{ width: 32, height: 32 }}
+                    />
+                  </ListItemAvatar>
+                )}
+                <ListItemText
+                  sx={{
+                    ml: message.sender === "me" ? 0 : 1,
+                    mr: message.sender === "me" ? 1 : 0,
+                    maxWidth: "70%",
+                  }}
+                  primary={
+                    <Paper
+                      elevation={0}
+                      sx={{
+                        p: 1.5,
+                        borderRadius:
+                          message.sender === "me"
+                            ? "18px 18px 0 18px"
+                            : "18px 18px 18px 0",
+                        bgcolor: message.sender === "me" ? "black" : "#e4e6eb",
+                        color: message.sender === "me" ? "white" : "black",
+                        wordBreak: "break-word",
+                      }}
+                    >
+                      {message.text}
+                    </Paper>
+                  }
+                  secondary={
+                    showTime ? (
+                      <Typography
+                        variant="caption"
+                        sx={{
+                          display: "block",
+                          textAlign: message.sender === "me" ? "right" : "left",
+                          color: "text.secondary",
+                          mt: 0.5,
+                        }}
+                      >
+                        {message.time}
+                      </Typography>
+                    ) : null
+                  }
+                />
+              </Box>
+            );
+          })}
           <div ref={messagesEndRef} />
         </List>
       </Box>
@@ -221,7 +295,19 @@ const UserChat = () => {
           <IconButton>
             <MoodIcon />
           </IconButton>
-          <IconButton>
+          <input
+            type="file"
+            accept="image/*"
+            ref={inputFileRef}
+            style={{ display: "none" }}
+            onChange={(e) => {
+              const file = e.target.files[0];
+              if (file) {
+                console.log("File selected: ", file.name, file.type, file.size);
+              }
+            }}
+          ></input>
+          <IconButton onClick={() => inputFileRef.current.click()}>
             <AttachFileIcon />
           </IconButton>
           <TextField
@@ -246,7 +332,7 @@ const UserChat = () => {
             <IconButton
               color="primary"
               onClick={handleSendMessage}
-              disabled={!newMessage.trim()}
+              disabled={!newMessage.trim() || !isConnected}
             >
               <SendIcon />
             </IconButton>

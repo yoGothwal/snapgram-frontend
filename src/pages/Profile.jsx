@@ -46,7 +46,6 @@ const StatItem = ({ value, label, onClick }) => {
 
 const Profile = () => {
   const user = useSelector((state) => state.user.user);
-  const token = useSelector((state) => state.user.token);
   const coords = useSelector((state) => state.user.coords);
 
   const [profileData, setProfileData] = useState(null);
@@ -54,7 +53,7 @@ const Profile = () => {
   const fetchUser = async () => {
     try {
       const res = await axios.get(`${baseURL}/api/users/${user.username}`, {
-        headers: { Authorization: `Bearer ${token}` },
+        withCredentials: true,
       });
       const u = res.data;
       console.log("Fetched profile", res.data);
@@ -68,7 +67,7 @@ const Profile = () => {
     if (user) {
       fetchUser();
     }
-  }, [user]);
+  }, []);
 
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -78,7 +77,7 @@ const Profile = () => {
     navigate(`/profile/edit`);
   };
   const handleFollowerCountClick = () => {
-    navigate(`/connections/${user.username}`);
+    navigate(`/connections/${profileData.user.username}`);
   };
 
   if (!user || !profileData) return null;
@@ -91,14 +90,24 @@ const Profile = () => {
       dispatch(
         setUser({
           user: { ...user, profilePicture: ev.target.result },
-          token,
+
           coords,
         })
       );
     };
     reader.readAsDataURL(file);
   };
+  const handleLogout = async () => {
+    await axios.post(
+      `${baseURL}/api/auth/sessionLogout`,
+      {},
+      { withCredentials: true }
+    );
 
+    dispatch(clearUser());
+    localStorage.removeItem("snapgram_user");
+    navigate("/login");
+  };
   const userContent = Array(12).fill(null);
 
   return (
@@ -114,7 +123,7 @@ const Profile = () => {
         >
           <Box sx={{ position: "relative" }}>
             <Avatar
-              src={user.profilePicture || "/src/images/user_dp.png"}
+              src={profileData.user.profilePicture || "/src/images/user_dp.png"}
               alt="Profile"
               sx={{
                 width: 100,
@@ -163,7 +172,7 @@ const Profile = () => {
               }}
             >
               <Typography variant="h5" fontWeight="bold">
-                {user.name}
+                {profileData.user.name}
               </Typography>
 
               <Box sx={{ display: "flex", gap: 0.5 }}>
@@ -172,20 +181,14 @@ const Profile = () => {
                 </IconButton>
                 <Tooltip title="Log Out">
                   <IconButton size="small">
-                    <KeyboardArrowDownIcon
-                      onClick={() => {
-                        dispatch(clearUser());
-                        localStorage.removeItem("snapgram_user");
-                        navigate("/login");
-                      }}
-                    />
+                    <KeyboardArrowDownIcon onClick={handleLogout} />
                   </IconButton>
                 </Tooltip>
               </Box>
             </Box>
 
             <Typography variant="body2" color="text.secondary">
-              @{user.username}
+              @{profileData.user.username}
             </Typography>
             <Typography
               variant="body1"
@@ -196,7 +199,7 @@ const Profile = () => {
                 width: "100%",
               }}
             >
-              {user.bio || "No biography added yet."}
+              {profileData.user.bio || "No biography added yet."}
             </Typography>
           </Box>
         </Box>
