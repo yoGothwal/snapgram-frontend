@@ -121,12 +121,23 @@ const UserChat = () => {
           "Content-Type": "multipart/form-data",
         },
         withCredentials: true,
+        onUploadProgress: (progressEvent) => {
+          // Optional: Add progress tracking
+          const percentCompleted = Math.round(
+            (progressEvent.loaded * 100) / progressEvent.total
+          );
+          console.log(`${percentCompleted}% uploaded`);
+        },
       });
-      console.log(res);
-      return res.data.imageUrl;
+
+      console.log("Upload successful:", res.data);
+      return {
+        imageUrl: res.data.imageUrl,
+        publicId: res.data.publicId, // Include publicId in return
+      };
     } catch (e) {
       console.error("Upload failed", e);
-      alert("failed to upload image");
+      alert(e.response?.data?.message || "Failed to upload image");
       return null;
     }
   };
@@ -138,10 +149,10 @@ const UserChat = () => {
     console.log(`Sending message to ${username}:`, newMessage);
     try {
       if (selectedImage) {
-        const imageUrl = await uploadImage(selectedImage.file);
-        console.log(imageUrl);
-        if (!imageUrl) return;
-        socket.send(JSON.stringify({ ...msg, imageUrl }));
+        const res = await uploadImage(selectedImage.file);
+        console.log(res);
+        if (!res) return;
+        socket.send(JSON.stringify({ ...msg, imageUrl: res.imageUrl }));
         setSelectedImage(null);
       }
       if (newMessage.trim() && !selectedImage) {
