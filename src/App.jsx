@@ -95,6 +95,7 @@ function AppContent() {
       throw error;
     }
   };
+  const a = 0;
   const signIn = async () => {
     try {
       const result = await signInWithPopup(auth, provider);
