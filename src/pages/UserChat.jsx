@@ -12,6 +12,7 @@ import {
   ListItemAvatar,
   ListItemText,
   Badge,
+  Button,
 } from "@mui/material";
 import { useSelector } from "react-redux";
 import {
@@ -20,6 +21,7 @@ import {
   Mic as MicIcon,
   Mood as MoodIcon,
   MoreVert as MoreVertIcon,
+  Cancel as CancelIcon,
 } from "@mui/icons-material";
 import axios from "axios";
 import ImageMessage from "../components/ImageMessage";
@@ -136,8 +138,31 @@ const UserChat = () => {
         publicId: res.data.publicId, // Include publicId in return
       };
     } catch (e) {
-      console.error("Upload failed", e);
+      console.error("Image upload failed", e);
       alert(e.response?.data?.message || "Failed to upload image");
+      return null;
+    }
+  };
+  const uploadAudio = async (audio) => {
+    console.log("trying to upload image...");
+    try {
+      const formData = new FormData();
+      formData.append("audio", audio);
+      const res = axios.post(`${baseURL}/upload`, formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+        withCredentials: true,
+        onUploadProgress: (event) => {
+          const percent = Math.floor((event.loaded / event.total) * 100);
+          console.log(`${percent}% audio uploaded`);
+        },
+      });
+      console.log("Upload successful:", res.data);
+      return res.data;
+    } catch (error) {
+      console.error("Audio upload failed", e);
+      alert(e.response?.data?.message || "Failed to upload audio");
       return null;
     }
   };
@@ -154,6 +179,10 @@ const UserChat = () => {
         if (!res) return;
         socket.send(JSON.stringify({ ...msg, imageUrl: res.imageUrl }));
         setSelectedImage(null);
+      }
+      if (recordedAudio) {
+        const res = await uploadAudio(recordedAudio.blob);
+        console.log(res);
       }
       if (newMessage.trim() && !selectedImage) {
         socket.send(JSON.stringify({ ...msg, text: newMessage }));
@@ -182,6 +211,57 @@ const UserChat = () => {
       if (oldPreview) URL.revokeObjectURL(oldPreview);
     };
   }, [selectedImage]);
+
+  //Audio functions
+  const [isRecording, setIsRecording] = useState(false);
+  const [recordedAudio, setRecordedAudio] = useState(null);
+  const audioChunksRef = useRef([]); //to record audio chunks
+  const mediaRecorderRef = useRef(null); //for microphone
+  const [recordingTime, setRecordingTime] = useState(0);
+  const recordingTimeRef = useRef(null);
+  const startRecording = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      mediaRecorderRef.current = new MediaRecorder(stream); //created microphone instance
+
+      audioChunksRef.current = [];
+      mediaRecorderRef.current.ondataavailable = (event) => {
+        if (event.data.size > 0) {
+          audioChunksRef.current.push(event.data);
+        }
+      };
+      mediaRecorderRef.current.onstop = () => {
+        const audioBlob = new Blob(audioChunksRef.current, {
+          type: "audio/webm",
+        });
+        setRecordedAudio({
+          blob: audioBlob,
+          url: URL.createObjectURL(audioBlob),
+        });
+      };
+      mediaRecorderRef.current.start();
+      setIsRecording(true);
+      recordingTimeRef.current = setInterval(() => {
+        setRecordingTime((prev) => prev + 1);
+      }, 1000);
+      console.log("recording started");
+    } catch (error) {
+      console.error("Error accessing microphone:", error);
+      alert("Microphone access denied. Please check permissions.");
+    }
+  };
+  const stopRecording = () => {
+    console.log("recording paused");
+    if (mediaRecorderRef.current && isRecording) {
+      mediaRecorderRef.current.stop();
+      setIsRecording(false);
+      clearInterval(recordingTimeRef.current);
+      setRecordingTime(0);
+      mediaRecorderRef.current.stream
+        .getTracks()
+        .forEach((track) => track.stop());
+    }
+  };
 
   return (
     <Box
@@ -403,6 +483,84 @@ const UserChat = () => {
             </Box>
           )
         }
+        {
+          /*recording animation */
+          isRecording && (
+            <Box
+              sx={{
+                display: "flex",
+                justifyContent: "center",
+                mb: 1,
+                position: "absolute",
+                bottom: "100%",
+                left: 0,
+                right: 0,
+                bgcolor: "background.paper",
+                p: 1,
+                border: "1px solid #ddd",
+              }}
+            >
+              <Box
+                sx={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 2,
+                  "& .pulse-dot": {
+                    color: "black",
+
+                    animation: "pulse 1s infinite",
+
+                    "@keyframes pulse": {
+                      "0%": { opacity: 1 },
+                      "50%": { opacity: 0.5 },
+                      "100%": { opacity: 1 },
+                    },
+                  },
+                }}
+              >
+                <Box
+                  sx={{
+                    width: "20px",
+                    height: "20px",
+                    borderRadius: "50%",
+                    bgcolor: "red",
+                    animation: "pulse 1s infinite",
+                  }}
+                />
+                <Typography>Recording: {recordingTime}s</Typography>
+              </Box>
+            </Box>
+          )
+        }
+        {
+          /* audio preview thumbnail */
+          recordedAudio && !isRecording && (
+            <Box
+              sx={{
+                display: "flex",
+                justifyContent: "center",
+                mb: 1,
+                position: "absolute",
+                bottom: "100%",
+                left: 0,
+                right: 0,
+                bgcolor: "background.paper",
+                p: 1,
+                border: "1px solid #ddd",
+              }}
+            >
+              <audio controls src={recordedAudio.url}></audio>
+              <Button
+                size="small"
+                onClick={() => setRecordedAudio(null)}
+                startIcon={<CancelIcon />}
+              >
+                Cancel
+              </Button>
+            </Box>
+          )
+        }
+        {/* Bottom Icons */}
         <Box sx={{ display: "flex", alignItems: "center", px: 1, mr: 1 }}>
           <IconButton>
             <MoodIcon />
@@ -455,16 +613,25 @@ const UserChat = () => {
               },
             }}
           />
-          {newMessage || selectedImage ? (
+          {newMessage || selectedImage || recordedAudio ? (
             <IconButton
               color="primary"
               onClick={handleSendMessage}
-              disabled={(!newMessage.trim() && !selectedImage) || !isConnected}
+              disabled={
+                (!newMessage.trim() && !selectedImage && !recordedAudio) ||
+                !isConnected
+              }
             >
               <SendIcon />
             </IconButton>
           ) : (
-            <IconButton>
+            <IconButton
+              onMouseDown={startRecording}
+              onMouseUp={stopRecording}
+              onTouchStart={startRecording}
+              onTouchEnd={stopRecording}
+              color={isRecording ? "error" : "default"}
+            >
               <MicIcon />
             </IconButton>
           )}
