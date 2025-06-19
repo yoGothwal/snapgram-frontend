@@ -24,7 +24,10 @@ import {
   Cancel as CancelIcon,
 } from "@mui/icons-material";
 import axios from "axios";
+
 import ImageMessage from "../components/ImageMessage";
+import AudioMessage from "../components/AudioMessage";
+
 const baseURL = import.meta.env.VITE_API_URL || "/api";
 
 const UserChat = () => {
@@ -47,6 +50,14 @@ const UserChat = () => {
   ];
   const MAX_IMAGE_SIZE = 10 * 1024 * 1024; //10mb
   const [selectedImage, setSelectedImage] = useState(null);
+
+  //audio states
+  const [isRecording, setIsRecording] = useState(false);
+  const [recordedAudio, setRecordedAudio] = useState(null);
+  const audioChunksRef = useRef([]); //to record audio chunks
+  const mediaRecorderRef = useRef(null); //for microphone
+  const [recordingTime, setRecordingTime] = useState(0);
+  const recordingTimeRef = useRef(null);
 
   useEffect(() => {
     if (!currentUser) {
@@ -118,7 +129,7 @@ const UserChat = () => {
     const formData = new FormData();
     formData.append("image", file);
     try {
-      const res = await axios.post(`${baseURL}/upload`, formData, {
+      const res = await axios.post(`${baseURL}/upload/image`, formData, {
         headers: {
           "Content-Type": "multipart/form-data",
         },
@@ -144,11 +155,11 @@ const UserChat = () => {
     }
   };
   const uploadAudio = async (audio) => {
-    console.log("trying to upload image...");
+    console.log("trying to upload audio...");
     try {
       const formData = new FormData();
       formData.append("audio", audio);
-      const res = axios.post(`${baseURL}/upload`, formData, {
+      const res = await axios.post(`${baseURL}/upload/audio`, formData, {
         headers: {
           "Content-Type": "multipart/form-data",
         },
@@ -159,10 +170,13 @@ const UserChat = () => {
         },
       });
       console.log("Upload successful:", res.data);
-      return res.data;
+      return {
+        audioUrl: res.data.audioUrl,
+        publicId: res.data.publicId, // Include publicId in return
+      };
     } catch (error) {
-      console.error("Audio upload failed", e);
-      alert(e.response?.data?.message || "Failed to upload audio");
+      console.error("Audio upload failed", error);
+      alert("Failed to upload audio");
       return null;
     }
   };
@@ -183,6 +197,9 @@ const UserChat = () => {
       if (recordedAudio) {
         const res = await uploadAudio(recordedAudio.blob);
         console.log(res);
+        if (!res) return;
+        socket.send(JSON.stringify({ ...msg, audioUrl: res.audioUrl }));
+        setRecordedAudio(null);
       }
       if (newMessage.trim() && !selectedImage) {
         socket.send(JSON.stringify({ ...msg, text: newMessage }));
@@ -193,7 +210,7 @@ const UserChat = () => {
       alert("Message failed");
       console.error("Error in sending message: ", error);
     }
-  }, [newMessage, socket, username, currentUser, selectedImage]);
+  }, [newMessage, socket, username, currentUser, selectedImage, recordedAudio]);
 
   const handleKeyPress = (e) => {
     if (e.key === "Enter" && !e.shiftKey) {
@@ -213,12 +230,6 @@ const UserChat = () => {
   }, [selectedImage]);
 
   //Audio functions
-  const [isRecording, setIsRecording] = useState(false);
-  const [recordedAudio, setRecordedAudio] = useState(null);
-  const audioChunksRef = useRef([]); //to record audio chunks
-  const mediaRecorderRef = useRef(null); //for microphone
-  const [recordingTime, setRecordingTime] = useState(0);
-  const recordingTimeRef = useRef(null);
   const startRecording = async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
@@ -366,17 +377,19 @@ const UserChat = () => {
                     <Paper
                       elevation={0}
                       sx={{
-                        p: 1.5,
-                        border: message.imageUrl ? "2px solid #e4e6eb" : "none",
+                        p: message.imageUrl ? 0 : message.audioUrl ? 0 : 1.5,
+
+                        // border: message.imageUrl ? "0px solid #e4e6eb" : "none",
                         borderRadius:
                           message.sender === "me"
                             ? "18px 18px 0 18px"
                             : "18px 18px 18px 0",
-                        bgcolor: message.imageUrl
-                          ? "transparent"
-                          : message.sender === "me"
-                            ? "black"
-                            : "#e4e6eb",
+                        bgcolor:
+                          message.imageUrl || message.audioUrl
+                            ? "transparent"
+                            : message.sender === "me"
+                              ? "black"
+                              : "#e4e6eb",
                         color: message.sender === "me" ? "white" : "black",
                         wordBreak: "break-word",
 
@@ -399,6 +412,19 @@ const UserChat = () => {
                             }}
                           >
                             <ImageMessage imageUrl={message.imageUrl} />
+                          </Box>
+                        )}
+                        {message.audioUrl && (
+                          <Box
+                            sx={{
+                              display: "flex",
+                              justifyContent:
+                                message.sender === "me"
+                                  ? "flex-end"
+                                  : "flex-start",
+                            }}
+                          >
+                            <AudioMessage audioUrl={message.audioUrl} />
                           </Box>
                         )}
                       </Typography>
@@ -427,6 +453,7 @@ const UserChat = () => {
         </List>
       </Box>
 
+      {/*Chat Footer */}
       <Paper
         elevation={0}
         sx={{
@@ -554,9 +581,7 @@ const UserChat = () => {
                 size="small"
                 onClick={() => setRecordedAudio(null)}
                 startIcon={<CancelIcon />}
-              >
-                Cancel
-              </Button>
+              ></Button>
             </Box>
           )
         }
