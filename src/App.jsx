@@ -109,7 +109,6 @@ function AppContent() {
           {},
           {
             headers: { Authorization: `Bearer ${token}` },
-            withCredentials: true,
           }
         );
         const coords = await getLocation();
