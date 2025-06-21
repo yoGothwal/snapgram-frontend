@@ -43,10 +43,13 @@ function AppContent() {
     }
   }, [dispatch, navigate]);
 
-  const fetchConnections = async (username) => {
+  const fetchConnections = async (username, token) => {
     try {
       const res = await axios.get(`${baseURL}/api/connections/${username}`, {
         withCredentials: true,
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
       });
       const { followers, followings } = res.data;
       dispatch(setFollowers(followers));
@@ -71,7 +74,7 @@ function AppContent() {
       );
     });
   };
-  const registerUser = async (profile, coords) => {
+  const registerUser = async (profile, coords, token) => {
     try {
       const profilePicture =
         profile.photoURL || "https://via.placeholder.com/150";
@@ -87,15 +90,18 @@ function AppContent() {
         },
         {
           withCredentials: true,
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
         }
       );
+      console.log(res.data);
       return res.data;
     } catch (error) {
       console.log("Registration error");
       throw error;
     }
   };
-  const a = 0;
   const signIn = async () => {
     try {
       const result = await signInWithPopup(auth, provider);
@@ -103,20 +109,21 @@ function AppContent() {
       const token = await profile.getIdToken();
 
       try {
-        console.log(token);
-        await axios.post(
-          `${baseURL}/api/auth/sessionLogin`,
-          {},
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
-        );
+        console.log("token generated: ", token);
+        // await axios.post(
+        //   `${baseURL}/api/auth/sessionLogin`,
+        //   {},
+        //   {
+        //     headers: { Authorization: `Bearer ${token}` },
+        //   }
+        // );
         const coords = await getLocation();
-        const userData = await registerUser(profile, coords);
-        await fetchConnections(userData.username);
+        const userData = await registerUser(profile, coords, token);
+        await fetchConnections(userData.username, token);
         const user = {
           user: userData,
           coords,
+          token,
         };
         dispatch(setUser(user));
         localStorage.setItem("snapgram_user", JSON.stringify(user));

@@ -12,7 +12,7 @@ const EditProfile = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const user = useSelector((state) => state.user.user);
-
+  const token = useSelector((state) => state.user.token);
   const coords = useSelector((state) => state.user.coords);
 
   const [form, setForm] = useState({
@@ -52,6 +52,9 @@ const EditProfile = () => {
         form,
         {
           withCredentials: true,
+          headers: {
+            Authorization: `Bearer: ${token}`,
+          },
         }
       );
       console.log(res.data);

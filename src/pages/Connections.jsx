@@ -40,9 +40,13 @@ const Connections = () => {
   const fetchConnections = async () => {
     try {
       setLoading(true);
-      const res = await axios.get(`${baseURL}/api/connections/${username}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const res = await axios.get(
+        `${baseURL}/api/connections/${username}`,
+
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
       const { followers, followings } = res.data;
       setFollowers(followers);
       setFollowings(followings);
@@ -55,7 +59,7 @@ const Connections = () => {
 
   useEffect(() => {
     fetchConnections();
-  }, [username]);
+  }, []);
 
   const handlePersonClick = (username) => {
     navigate(username === user.username ? `/profile` : `/${username}`);

@@ -50,6 +50,7 @@ const UserProfile = () => {
   const navigate = useNavigate();
 
   const user = useSelector((state) => state.user.user);
+  const token = useSelector((state) => state.user.token);
 
   const followings = useSelector((state) => state.connection.followings);
 
@@ -66,6 +67,9 @@ const UserProfile = () => {
     try {
       const res = await axios.get(`${baseURL}/api/users/${username}`, {
         withCredentials: true,
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
       });
       const u = res.data;
       console.log("Fetched user", res.data);
@@ -92,6 +96,9 @@ const UserProfile = () => {
     try {
       await axios.post(`${baseURL}/api/users/follow/${fetchedUser.user._id}`, {
         withCredentials: true,
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
       });
       await fetchUser();
       const updatedFollowings = [...followings, fetchedUser.user];
@@ -121,6 +128,9 @@ const UserProfile = () => {
         `${baseURL}/api/users/unfollow/${fetchedUser.user._id}`,
         {
           withCredentials: true,
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
         }
       );
       await fetchUser();

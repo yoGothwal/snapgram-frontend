@@ -11,10 +11,10 @@ import {
   Tooltip,
 } from "@mui/material";
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
-import { useRef, useState, useEffect } from "react";
-import { clearUser, setUser } from "../features/userSlice";
+import { useState, useEffect } from "react";
+import { clearUser } from "../features/userSlice";
 import { useDispatch, useSelector } from "react-redux";
-import { PhotoCamera, MoreVert, Edit } from "@mui/icons-material";
+import { MoreVert, Edit } from "@mui/icons-material";
 import axios from "axios";
 const baseURL = import.meta.env.VITE_API_URL || "/api";
 
@@ -46,7 +46,7 @@ const StatItem = ({ value, label, onClick }) => {
 
 const Profile = () => {
   const user = useSelector((state) => state.user.user);
-  const coords = useSelector((state) => state.user.coords);
+  const token = useSelector((state) => state.user.token);
 
   const [profileData, setProfileData] = useState(null);
 
@@ -54,6 +54,9 @@ const Profile = () => {
     try {
       const res = await axios.get(`${baseURL}/api/users/${user.username}`, {
         withCredentials: true,
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
       });
       const u = res.data;
       console.log("Fetched profile", res.data);
@@ -71,7 +74,6 @@ const Profile = () => {
 
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const fileInputRef = useRef();
 
   const handleEditProfile = () => {
     navigate(`/profile/edit`);
@@ -82,21 +84,6 @@ const Profile = () => {
 
   if (!user || !profileData) return null;
 
-  const handleImageChange = (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = (ev) => {
-      dispatch(
-        setUser({
-          user: { ...user, profilePicture: ev.target.result },
-
-          coords,
-        })
-      );
-    };
-    reader.readAsDataURL(file);
-  };
   const handleLogout = async () => {
     await axios.post(
       `${baseURL}/api/auth/sessionLogout`,

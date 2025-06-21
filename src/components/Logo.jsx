@@ -1,6 +1,6 @@
 import { Typography, Box, Popover, Avatar } from "@mui/material";
 import { useNavigate } from "react-router-dom";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import MessageIcon from "@mui/icons-material/Message";
 import NotificationsIcon from "@mui/icons-material/Notifications";
 import axios from "axios";
@@ -8,26 +8,11 @@ import { useSelector } from "react-redux";
 
 const baseURL = import.meta.env.VITE_API_URL || "/api";
 
-const Content = () => {
+const Content = ({ notifications }) => {
   const [anchorEl, setAnchorEl] = useState(null);
-  const [notifications, setNotifications] = useState([]);
   const navigate = useNavigate();
   const user = useSelector((state) => state.user.user);
-  const a = 0;
-  const fetchNotifications = async () => {
-    try {
-      const res = await axios.get(`${baseURL}/api/users/notifications`, {
-        withCredentials: true,
-      });
-      setNotifications(res.data);
-    } catch (e) {
-      console.log("error fetching", e);
-    }
-  };
-
-  useEffect(() => {
-    fetchNotifications();
-  }, [user]);
+  const token = useSelector((state) => state.user.token);
 
   const handleNotificationIconClick = (event) => {
     setAnchorEl(event.currentTarget);
@@ -147,7 +132,7 @@ const Content = () => {
     </Box>
   );
 };
-const Logo = () => {
+const Logo = ({ notifications }) => {
   return (
     <Box sx={{ position: "relative" }}>
       <Box
@@ -158,7 +143,7 @@ const Logo = () => {
           height: 20,
         }}
       >
-        <Content />
+        <Content notifications={notifications} />
       </Box>
     </Box>
   );

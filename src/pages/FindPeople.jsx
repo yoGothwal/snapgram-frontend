@@ -35,6 +35,8 @@ const FindPeople = () => {
   const user =
     useSelector((state) => state.user.user) ||
     JSON.parse(localStorage.getItem("snapgram_user"));
+  const token = useSelector((state) => state.user.token);
+
   const coords = useSelector((state) => state.user.coords);
   const navigate = useNavigate();
   const [nearby, setNearby] = useState([]);
@@ -66,7 +68,12 @@ const FindPeople = () => {
       const delay = new Promise((resolve) => setTimeout(resolve, 1000));
       const apiCall = axios.get(
         `${baseURL}/api/users/nearby?lat=${lat}&lng=${lng}&radius=${debouncedRadius}`,
-        { withCredentials: true }
+        {
+          withCredentials: true,
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
       );
       const [res] = await Promise.all([apiCall, delay]);
 
