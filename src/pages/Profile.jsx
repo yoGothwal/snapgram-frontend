@@ -49,11 +49,10 @@ const Profile = () => {
   const token = useSelector((state) => state.user.token);
 
   const [profileData, setProfileData] = useState(null);
-
+  console.log(token);
   const fetchUser = async () => {
     try {
       const res = await axios.get(`${baseURL}/api/users/${user.username}`, {
-        withCredentials: true,
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -67,16 +66,14 @@ const Profile = () => {
   };
 
   useEffect(() => {
-    if (user) {
-      fetchUser();
-    }
-  }, []);
+    fetchUser();
+  }, [user, token]);
 
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
   const handleEditProfile = () => {
-    navigate(`/profile/edit`);
+    navigate(`/profile/edit`, { state: { user, token } });
   };
   const handleFollowerCountClick = () => {
     navigate(`/connections/${profileData.user.username}`);
@@ -85,12 +82,6 @@ const Profile = () => {
   if (!user || !profileData) return null;
 
   const handleLogout = async () => {
-    await axios.post(
-      `${baseURL}/api/auth/sessionLogout`,
-      {},
-      { withCredentials: true }
-    );
-
     dispatch(clearUser());
     localStorage.removeItem("snapgram_user");
     navigate("/login");

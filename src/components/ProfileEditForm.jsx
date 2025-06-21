@@ -11,9 +11,11 @@ import { setUser } from "../features/userSlice";
 const EditProfile = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
+
   const user = useSelector((state) => state.user.user);
   const token = useSelector((state) => state.user.token);
   const coords = useSelector((state) => state.user.coords);
+  if (!user || !token) return null;
 
   const [form, setForm] = useState({
     name: "",
@@ -24,14 +26,25 @@ const EditProfile = () => {
   const fileInputRef = useRef();
 
   useEffect(() => {
-    if (user) {
-      setForm({
-        name: user.name,
-        bio: user.bio || "",
-        profilePicture: user.profilePicture || "",
-      });
-    }
-  }, [user]);
+    const fetchLatest = async () => {
+      try {
+        const res = await axios.get(`${baseURL}/api/users/${user.username}`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        setForm({
+          name: res.data.user.name,
+          bio: res.data.user.bio || "",
+          profilePicture: res.data.user.profilePicture || "",
+        });
+      } catch (err) {
+        console.log("Error loading latest user:", err);
+      }
+    };
+
+    if (user && token) fetchLatest();
+  }, [user, token]);
 
   const handleImageChange = (e) => {
     const file = e.target.files[0];
@@ -53,7 +66,7 @@ const EditProfile = () => {
         {
           withCredentials: true,
           headers: {
-            Authorization: `Bearer: ${token}`,
+            Authorization: `Bearer ${token}`,
           },
         }
       );

@@ -94,12 +94,16 @@ const UserProfile = () => {
 
   const handleFollow = async () => {
     try {
-      await axios.post(`${baseURL}/api/users/follow/${fetchedUser.user._id}`, {
-        withCredentials: true,
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      await axios.post(
+        `${baseURL}/api/users/follow/${fetchedUser.user._id}`,
+        {},
+        {
+          withCredentials: true,
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
       await fetchUser();
       const updatedFollowings = [...followings, fetchedUser.user];
       dispatch(setFollowings(updatedFollowings));
@@ -126,6 +130,7 @@ const UserProfile = () => {
     try {
       await axios.post(
         `${baseURL}/api/users/unfollow/${fetchedUser.user._id}`,
+        {},
         {
           withCredentials: true,
           headers: {
