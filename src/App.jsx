@@ -110,13 +110,6 @@ function AppContent() {
 
       try {
         console.log("token generated: ", token);
-        // await axios.post(
-        //   `${baseURL}/api/auth/sessionLogin`,
-        //   {},
-        //   {
-        //     headers: { Authorization: `Bearer ${token}` },
-        //   }
-        // );
         const coords = await getLocation();
         const userData = await registerUser(profile, coords, token);
         await fetchConnections(userData.username, token);

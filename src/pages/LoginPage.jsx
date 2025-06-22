@@ -1,4 +1,4 @@
-import { Box, Typography, Button } from "@mui/material";
+import { Box, Typography, Button, Paper, FormControl } from "@mui/material";
 import GoogleIcon from "@mui/icons-material/Google";
 
 const LoginPage = ({ signIn }) => (
@@ -12,6 +12,10 @@ const LoginPage = ({ signIn }) => (
     <Typography variant="h4" color="primary" gutterBottom>
       Hello
     </Typography>
+    <Paper elevation={2}>
+      <FormControl>Email</FormControl>
+    </Paper>
+    <Typography>Or</Typography>
     <Button
       variant="outlined"
       startIcon={<GoogleIcon />}
