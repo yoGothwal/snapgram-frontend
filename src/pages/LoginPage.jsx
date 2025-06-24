@@ -99,7 +99,7 @@ const LoginPage = ({ signIn }) => {
       console.log("Logged-in: ", user);
       navigate("/explore");
     } catch (error) {
-      console.erro("error in registering user", error);
+      console.error("error in registering user", error);
     }
   };
   return (
