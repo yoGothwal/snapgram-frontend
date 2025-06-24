@@ -16,6 +16,7 @@ import { clearUser } from "../features/userSlice";
 import { useDispatch, useSelector } from "react-redux";
 import { MoreVert, Edit } from "@mui/icons-material";
 import axios from "axios";
+import ImageMessage from "../components/ImageMessage";
 const baseURL = import.meta.env.VITE_API_URL || "/api";
 
 const ProfileCard = ({ children }) => {
@@ -33,11 +34,14 @@ const ProfileCard = ({ children }) => {
 
 const StatItem = ({ value, label, onClick }) => {
   return (
-    <Box onClick={onClick} sx={{ textAlign: "center", px: 1 }}>
+    <Box
+      onClick={onClick}
+      sx={{ textAlign: "center", minWidth: "60px", cursor: "pointer" }}
+    >
       <Typography variant="h6" fontWeight="bold">
         {value}
       </Typography>
-      <Typography variant="caption" color="text.secondary">
+      <Typography variant="caption" color="text.secondary" onClick={onClick}>
         {label}
       </Typography>
     </Box>
@@ -48,8 +52,8 @@ const Profile = () => {
   const user = useSelector((state) => state.user.user);
   const token = useSelector((state) => state.user.token);
 
+  if (!user || !token) return null;
   const [profileData, setProfileData] = useState(null);
-  console.log(token);
   const fetchUser = async () => {
     try {
       const res = await axios.get(`${baseURL}/api/users/${user.username}`, {
@@ -89,120 +93,139 @@ const Profile = () => {
   const userContent = Array(12).fill(null);
 
   return (
-    <Box sx={{ maxWidth: "800px", mx: "auto", p: 2, mt: 2 }}>
-      <ProfileCard>
-        <Box
-          sx={{
-            display: "flex",
-            flexDirection: { xs: "column", sm: "row" },
-            gap: 3,
-            alignItems: { xs: "flex-start", sm: "center" },
-          }}
-        >
-          <Box sx={{ position: "relative" }}>
-            <Avatar
-              src={profileData.user.profilePicture || "/src/images/user_dp.png"}
-              alt="Profile"
-              sx={{
-                width: 100,
-                height: 100,
-                border: "2px solid #000",
-              }}
-            />
-          </Box>
-
+    <>
+      <Box sx={{ maxWidth: "800px", mx: "auto", p: 2, mt: 2 }}>
+        <ProfileCard>
           <Box
             sx={{
-              flexGrow: 1,
-              width: "100%",
-
               display: "flex",
-              flexDirection: "column",
+              flexDirection: { xs: "column", sm: "row" },
+              gap: 3,
+              alignItems: { xs: "flex-start", sm: "center" },
             }}
           >
-            <Box
-              sx={{
-                display: "flex",
-                alignItems: "center",
-                gap: 1,
-                justifyContent: "space-between",
-                flexWrap: "wrap",
-              }}
-            >
-              <Typography variant="h5" fontWeight="bold">
-                {profileData.user.name}
-              </Typography>
-
-              <Box sx={{ display: "flex", gap: 0.5 }}>
-                <IconButton size="small" onClick={handleEditProfile}>
-                  <Edit fontSize="small" />
-                </IconButton>
-                <Tooltip title="Log Out">
-                  <IconButton size="small">
-                    <KeyboardArrowDownIcon onClick={handleLogout} />
-                  </IconButton>
-                </Tooltip>
-              </Box>
+            <Box sx={{ position: "relative" }}>
+              <ImageMessage
+                imageUrl={
+                  profileData.user.profilePicture || "/src/images/user_dp.png"
+                }
+              >
+                <Avatar
+                  src={
+                    profileData.user.profilePicture || "/src/images/user_dp.png"
+                  }
+                  alt="Profile"
+                  sx={{
+                    width: 100,
+                    height: 100,
+                    border: "2px solid #000",
+                  }}
+                />
+              </ImageMessage>
             </Box>
 
-            <Typography variant="body2" color="text.secondary">
-              @{profileData.user.username}
-            </Typography>
-            <Typography
-              variant="body1"
-              sx={{
-                mt: 2,
-                mb: 2,
-                wordBreak: "break-word",
-                width: "100%",
-              }}
-            >
-              {profileData.user.bio || "No biography added yet."}
-            </Typography>
-          </Box>
-        </Box>
-
-        <Divider sx={{ my: 2 }} />
-
-        <Box
-          sx={{
-            display: "flex",
-            justifyContent: "space-around",
-            flexWrap: "wrap",
-            gap: 1,
-          }}
-        >
-          <StatItem
-            onClick={handleFollowerCountClick}
-            value={profileData.user.followerCount || 0}
-            label="CONNECTIONS"
-          />
-          <StatItem
-            onClick={handleFollowerCountClick}
-            value={profileData.user.followingCount || 0}
-            label="FOLLOWING"
-          />
-          <StatItem value={user.postsCount || 0} label="PUBLICATIONS" />
-        </Box>
-      </ProfileCard>
-
-      <Box sx={{ display: "flex", justifyContent: "center", mt: 2, gap: 2 }}>
-        <Button
-          variant="contained"
-          sx={{
-            backgroundColor: "black",
-            color: "white",
-            "&:hover": { backgroundColor: "#333" },
-          }}
-        >
-          NEW POST
-        </Button>
-      </Box>
-      <Grid container spacing={2} sx={{ mt: 1 }}>
-        {userContent.map((_, index) => (
-          <Grid item xs={6} md={4} key={index}>
             <Box
               sx={{
+                flexGrow: 1,
+                width: "100%",
+
+                display: "flex",
+                flexDirection: "column",
+              }}
+            >
+              <Box
+                sx={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 1,
+                  justifyContent: "space-between",
+                  flexWrap: "wrap",
+                }}
+              >
+                <Typography variant="h5" fontWeight="bold">
+                  {profileData.user.name}
+                </Typography>
+
+                <Box sx={{ display: "flex", gap: 0.5 }}>
+                  <IconButton size="small" onClick={handleEditProfile}>
+                    <Edit fontSize="small" />
+                  </IconButton>
+                  <Tooltip title="Log Out">
+                    <IconButton size="small">
+                      <KeyboardArrowDownIcon onClick={handleLogout} />
+                    </IconButton>
+                  </Tooltip>
+                </Box>
+              </Box>
+
+              <Typography variant="body2" color="text.secondary">
+                @{profileData.user.username}
+              </Typography>
+              <Typography
+                variant="body1"
+                sx={{
+                  mt: 2,
+                  mb: 2,
+                  wordBreak: "break-word",
+                  width: "100%",
+                }}
+              >
+                {profileData.user.bio || "No biography added yet."}
+              </Typography>
+            </Box>
+          </Box>
+          <Box
+            sx={{
+              display: "flex",
+              justifyContent: "space-around",
+              flexWrap: "wrap",
+              gap: 1,
+              mt: 1,
+            }}
+          >
+            <StatItem
+              onClick={handleFollowerCountClick}
+              value={profileData.user.followerCount || 0}
+              label="FOLLOWERS"
+            />
+            <StatItem
+              onClick={handleFollowerCountClick}
+              value={profileData.user.followingCount || 0}
+              label="FOLLOWING"
+            />
+            <StatItem value={user.postsCount || 0} label="POSTS" />
+          </Box>{" "}
+          <Divider sx={{ my: 1 }} />
+        </ProfileCard>
+
+        <Box sx={{ display: "flex", justifyContent: "center", gap: 2 }}>
+          <Button
+            variant="contained"
+            sx={{
+              backgroundColor: "black",
+              color: "white",
+              "&:hover": { backgroundColor: "#333" },
+            }}
+          >
+            NEW POST
+          </Button>
+        </Box>
+      </Box>
+      <Grid
+        container
+        spacing={1}
+        sx={{
+          mt: 3,
+          display: "flex",
+          justifyContent: "center",
+        }}
+      >
+        {userContent.map((_, index) => (
+          <Grid item xs={12} sm={12} key={index}>
+            <Box
+              sx={{
+                minHeight: { xs: 180, sm: 250, md: 300 },
+                borderRadius: 1,
                 aspectRatio: "1/1",
                 backgroundColor: "rgba(0,0,0,0.05)",
                 border: "1px solid #e0e0e0",
@@ -232,7 +255,7 @@ const Profile = () => {
           </Grid>
         ))}
       </Grid>
-    </Box>
+    </>
   );
 };
 

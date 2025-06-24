@@ -309,7 +309,7 @@ const FindPeople = () => {
             // .filter((u) => u._id != user?._id)
             .map((u) => (
               <ListItem
-                key={u.uid}
+                key={u._id || u.uid || u.userId}
                 sx={{
                   mb: 1,
                   cursor: "pointer",

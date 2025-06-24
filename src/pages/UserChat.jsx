@@ -411,7 +411,19 @@ const UserChat = () => {
                                   : "flex-start",
                             }}
                           >
-                            <ImageMessage imageUrl={message.imageUrl} />
+                            <ImageMessage imageUrl={message.imageUrl}>
+                              <img
+                                src={imageUrl}
+                                alt="Click to enlarge"
+                                style={{
+                                  maxWidth: "100%",
+                                  maxHeight: "200px",
+                                  borderRadius: "8px",
+                                  marginTop: 8,
+                                  display: "block", // Important for click handling
+                                }}
+                              />
+                            </ImageMessage>
                           </Box>
                         )}
                         {message.audioUrl && (
