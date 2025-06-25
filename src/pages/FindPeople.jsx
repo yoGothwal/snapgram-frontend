@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import axios from "axios";
 import GpsNotFixedIcon from "@mui/icons-material/GpsNotFixed";
 import GpsFixedIcon from "@mui/icons-material/GpsFixed";
@@ -59,12 +59,7 @@ const FindPeople = () => {
     setLoading(true);
     try {
       const { lat, lng } = coords;
-      const cacheKey = `nearby-${lat}-${lng}-${debouncedRadius}`;
-      const cachedData = sessionStorage.getItem(cacheKey);
-      if (cachedData) {
-        setNearby(JSON.parse(cachedData));
-        return;
-      }
+
       const delay = new Promise((resolve) => setTimeout(resolve, 1000));
       const apiCall = axios.get(
         `${baseURL}/api/users/nearby?lat=${lat}&lng=${lng}&radius=${debouncedRadius}`,
@@ -75,13 +70,13 @@ const FindPeople = () => {
           },
         }
       );
+
       const [res] = await Promise.all([apiCall, delay]);
 
       const filteredNearby = res.data.filter((n) => n._id !== user._id);
+
       setNearby(filteredNearby);
       console.log("Nearby people:", filteredNearby);
-
-      sessionStorage.setItem(cacheKey, JSON.stringify(filteredNearby));
     } catch (error) {
       console.error("Fetch error:", error);
     } finally {

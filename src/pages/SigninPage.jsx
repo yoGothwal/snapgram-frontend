@@ -16,7 +16,7 @@ import { useNavigate } from "react-router-dom";
 import { setUser } from "../features/userSlice";
 
 const baseURL = import.meta.env.VITE_API_URL || "/api";
-const LoginPage = ({ signIn }) => {
+const SigninPage = ({ signIn }) => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const [step, setStep] = useState(0);
@@ -282,4 +282,4 @@ const LoginPage = ({ signIn }) => {
   );
 };
 
-export default LoginPage;
+export default SigninPage;

@@ -7,6 +7,7 @@ import { PhotoCamera } from "@mui/icons-material";
 import { useRef } from "react";
 import { useDispatch } from "react-redux";
 import { setUser } from "../features/userSlice";
+const baseURL = import.meta.env.VITE_API_URL || "/api";
 
 const EditProfile = () => {
   const navigate = useNavigate();
@@ -15,7 +16,6 @@ const EditProfile = () => {
   const user = useSelector((state) => state.user.user);
   const token = useSelector((state) => state.user.token);
   const coords = useSelector((state) => state.user.coords);
-  if (!user || !token) return null;
 
   const [form, setForm] = useState({
     name: "",
@@ -55,7 +55,6 @@ const EditProfile = () => {
     };
     reader.readAsDataURL(file);
   };
-  const baseURL = import.meta.env.VITE_API_URL || "/api";
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -64,7 +63,6 @@ const EditProfile = () => {
         `${baseURL}/api/users/${user.username}`,
         form,
         {
-          withCredentials: true,
           headers: {
             Authorization: `Bearer ${token}`,
           },

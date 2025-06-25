@@ -16,6 +16,7 @@ import axios from "axios";
 import { useDispatch, useSelector } from "react-redux";
 import { MoreVert } from "@mui/icons-material";
 import { setFollowings } from "../features/connectionSlice";
+import ImageMessage from "../components/ImageMessage";
 
 const baseURL = import.meta.env.VITE_API_URL || "/api";
 
@@ -34,7 +35,10 @@ const ProfileCard = ({ children }) => {
 
 const StatItem = ({ value, label, onClick }) => {
   return (
-    <Box onClick={onClick} sx={{ textAlign: "center", px: 1 }}>
+    <Box
+      onClick={onClick}
+      sx={{ textAlign: "center", minWidth: "60px", cursor: "pointer" }}
+    >
       <Typography variant="h6" fontWeight="bold">
         {value}
       </Typography>
@@ -51,6 +55,7 @@ const UserProfile = () => {
 
   const user = useSelector((state) => state.user.user);
   const token = useSelector((state) => state.user.token);
+  if (!user || !token) return null;
 
   const followings = useSelector((state) => state.connection.followings);
 
@@ -74,10 +79,7 @@ const UserProfile = () => {
       const u = res.data;
       console.log("Fetched user", res.data);
       setFetchedUser(u);
-      // setCount({
-      //   flwrCount: res.data.user.followerCount,
-      //   flwnCount: res.data.user.followingCount,
-      // });
+
       setIsFollowing(u.isFollowing);
     } catch (error) {
       console.error("Error fetching user:", error);
@@ -91,6 +93,7 @@ const UserProfile = () => {
   }, []);
 
   if (!user || !fetchedUser) return null;
+  console.log("DP URL:", fetchedUser.user.profilePicture);
 
   const handleFollow = async () => {
     try {
@@ -171,146 +174,192 @@ const UserProfile = () => {
   const userContent = Array(9).fill(null);
 
   return (
-    <Box sx={{ maxWidth: "800px", mx: "auto", p: 2, mt: 2 }}>
-      {/* Profile Info */}
-      <ProfileCard>
-        {/* Profile Picture and User Info Section */}
-        <Box
-          sx={{
-            display: "flex",
-            flexDirection: { xs: "column", sm: "row" },
-            gap: 3,
-            alignItems: { xs: "flex-start", sm: "center" },
-          }}
-        >
-          {/* Profile Picture with Edit Button */}
-          <Box sx={{ position: "relative" }}>
-            <Avatar
-              src={fetchedUser.user.profilePicture || "/src/images/user_dp.png"}
-              alt="Profile"
-              sx={{
-                width: 100,
-                height: 100,
-                border: "2px solid #000",
-              }}
-            />
-          </Box>
-
-          {/* User Info Section */}
-          <Box sx={{ flexGrow: 1, width: "100%" }}>
-            <Box
-              sx={{
-                display: "flex",
-                alignItems: "center",
-                gap: 1,
-                justifyContent: "space-between",
-                flexWrap: "wrap",
-              }}
-            >
-              <Typography variant="h5" fontWeight="bold">
-                {fetchedUser.user.name}
-              </Typography>
+    <>
+      <Box sx={{ maxWidth: "800px", mx: "auto", p: 2, mt: 2 }}>
+        {/* Profile Info */}
+        <ProfileCard>
+          {/* Profile Picture and User Info Section */}
+          <Box
+            sx={{
+              display: "flex",
+              flexDirection: { xs: "column", sm: "row" },
+              gap: 3,
+              alignItems: { xs: "flex-start", sm: "center" },
+            }}
+          >
+            {/* Profile Picture with Edit Button */}
+            <Box sx={{ position: "relative" }}>
+              <ImageMessage
+                imageUrl={
+                  fetchedUser.user.profilePicture || "/src/images/user_dp.png"
+                }
+              >
+                <Avatar
+                  src={
+                    fetchedUser.user.profilePicture || "/src/images/user_dp.png"
+                  }
+                  alt="Profile"
+                  sx={{
+                    width: 100,
+                    height: 100,
+                    border: "2px solid #000",
+                  }}
+                />
+              </ImageMessage>
             </Box>
 
-            <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-              @{fetchedUser.user.username}
-            </Typography>
+            {/* User Info Section */}
+            <Box sx={{ flexGrow: 1, width: "100%" }}>
+              <Box
+                sx={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 1,
+                  justifyContent: "space-between",
+                  flexWrap: "wrap",
+                }}
+              >
+                <Typography variant="h5" fontWeight="bold">
+                  {fetchedUser.user.name}
+                </Typography>
+              </Box>
 
-            {/* Bio Section - Full width */}
-            <Typography
-              variant="body1"
-              sx={{
-                mt: 2,
-                wordBreak: "break-word",
-                width: "100%",
-              }}
-            >
-              {fetchedUser.user.bio || "No biography added yet."}
-            </Typography>
+              <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+                @{fetchedUser.user.username}
+              </Typography>
+
+              {/* Bio Section - Full width */}
+              <Typography
+                variant="body1"
+                sx={{
+                  mt: 2,
+                  wordBreak: "break-word",
+                  width: "100%",
+                }}
+              >
+                {fetchedUser.user.bio || "No biography added yet."}
+              </Typography>
+            </Box>
           </Box>
-        </Box>
 
-        <Divider sx={{ my: 2 }} />
+          {/* Stats Section */}
+          <Box
+            sx={{
+              display: "flex",
+              justifyContent: "space-around",
+              flexWrap: "wrap",
+              mt: 3,
+              gap: { xs: 1, sm: 2 },
+            }}
+          >
+            <StatItem
+              onClick={handleFollowingClick}
+              value={fetchedUser.user.followerCount || 0}
+              label="FOLLOWERS"
+            />
+            <StatItem
+              onClick={handleFollowingClick}
+              value={fetchedUser.user.followingCount || 0}
+              label="FOLLOWING"
+            />
+            <StatItem value={fetchedUser.user.postsCount || 0} label="POSTS" />
+          </Box>
+          <Divider sx={{ my: 1 }} />
+        </ProfileCard>
 
-        {/* Stats Section */}
+        {/* Action Buttons */}
         <Box
           sx={{
             display: "flex",
-            justifyContent: "space-around",
-            flexWrap: "wrap",
-            gap: { xs: 1, sm: 2 },
+            justifyContent: "center",
+
+            gap: 2,
           }}
         >
-          <StatItem
-            onClick={handleFollowingClick}
-            value={fetchedUser.user.followerCount || 0}
-            label="CONNECTIONS"
-          />
-          <StatItem
-            onClick={handleFollowingClick}
-            value={fetchedUser.user.followingCount || 0}
-            label="FOLLOWING"
-          />
-          <StatItem
-            value={fetchedUser.user.postsCount || 0}
-            label="PUBLICATIONS"
-          />
-        </Box>
-      </ProfileCard>
-
-      {/* Action Buttons */}
-      <Box sx={{ display: "flex", justifyContent: "center", mt: 2, gap: 2 }}>
-        {isFollowing ? (
-          <>
-            <Button
-              onClick={handleUnfollow}
-              variant="outlined"
-              sx={{
-                borderColor: "black",
-                color: "black",
-                "&:hover": {
+          {isFollowing ? (
+            <>
+              <Button
+                onClick={handleUnfollow}
+                variant="outlined"
+                sx={{
                   borderColor: "black",
-                  backgroundColor: "rgba(0,0,0,0.05)",
-                },
-              }}
-            >
-              UNFOLLOW
-            </Button>
+                  color: "black",
+                  "&:hover": {
+                    borderColor: "black",
+                    backgroundColor: "rgba(0,0,0,0.05)",
+                  },
+                }}
+              >
+                UNFOLLOW
+              </Button>
+              <Button
+                onClick={handleChatClick}
+                variant="contained"
+                sx={{
+                  backgroundColor: "black",
+                  color: "white",
+                  "&:hover": { backgroundColor: "#333" },
+                }}
+              >
+                MESSAGE
+              </Button>
+            </>
+          ) : (
             <Button
-              onClick={handleChatClick}
+              onClick={handleFollow}
               variant="contained"
               sx={{
                 backgroundColor: "black",
                 color: "white",
                 "&:hover": { backgroundColor: "#333" },
+                width: "100%",
+                maxWidth: 400,
               }}
             >
-              MESSAGE
+              FOLLOW
             </Button>
-          </>
-        ) : (
-          <Button
-            onClick={handleFollow}
-            variant="contained"
+          )}
+        </Box>
+
+        <Snackbar
+          open={notification.open}
+          autoHideDuration={3000}
+          onClose={() => setNotification({ ...notification, open: false })}
+          sx={{
+            position: "fixed",
+            top: "50%",
+            left: "50%",
+            transform: "translate(-50%, -50%)",
+            zIndex: 1400, // above modals
+            backgroundColor: "transparent",
+          }}
+        >
+          <Alert
+            severity={notification.severity}
             sx={{
-              backgroundColor: "black",
+              backgroundColor: "rgba(0, 0, 0, 0.7)",
               color: "white",
-              "&:hover": { backgroundColor: "#333" },
-              width: "100%",
-              maxWidth: 400,
             }}
           >
-            FOLLOW
-          </Button>
-        )}
+            {notification.message}
+          </Alert>
+        </Snackbar>
       </Box>
-
       {/* Content Grid */}
-      <Grid container spacing={2} sx={{ mt: 1 }}>
+      <Grid
+        container
+        spacing={2}
+        sx={{
+          mt: 1,
+          display: "flex",
+          flexWrap: "wrap",
+        }}
+      >
         {userContent.map((_, index) => (
           <Grid item xs={6} key={index}>
             <Box
               sx={{
+                minHeight: { xs: 170, sm: 250, md: 300 },
                 aspectRatio: "1/1",
                 backgroundColor: "rgba(0,0,0,0.05)",
                 border: "1px solid #e0e0e0",
@@ -340,31 +389,7 @@ const UserProfile = () => {
           </Grid>
         ))}
       </Grid>
-
-      <Snackbar
-        open={notification.open}
-        autoHideDuration={3000}
-        onClose={() => setNotification({ ...notification, open: false })}
-        sx={{
-          position: "fixed",
-          top: "50%",
-          left: "50%",
-          transform: "translate(-50%, -50%)",
-          zIndex: 1400, // above modals
-          backgroundColor: "transparent",
-        }}
-      >
-        <Alert
-          severity={notification.severity}
-          sx={{
-            backgroundColor: "rgba(0, 0, 0, 0.7)",
-            color: "white",
-          }}
-        >
-          {notification.message}
-        </Alert>
-      </Snackbar>
-    </Box>
+    </>
   );
 };
 

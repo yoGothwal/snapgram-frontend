@@ -23,7 +23,7 @@ import UserChat from "./pages/UserChat";
 import { auth, provider, signInWithPopup } from "./firebase";
 import axios from "axios";
 
-import LoginPage from "./pages/LoginPage";
+import SigninPage from "./pages/SigninPage";
 import Connections from "./pages/Connections";
 import { setFollowers, setFollowings } from "./features/connectionSlice";
 
@@ -135,7 +135,7 @@ function AppContent() {
   return (
     <>
       <Routes>
-        <Route path="/login" element={<LoginPage signIn={signIn} />} />{" "}
+        <Route path="/login" element={<SigninPage signIn={signIn} />} />{" "}
         <Route path="/chat" element={<Chat />} />
         <Route
           path="/find-people"

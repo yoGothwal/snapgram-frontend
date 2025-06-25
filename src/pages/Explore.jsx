@@ -1,110 +1,58 @@
-import { Box, Avatar, Typography, Paper } from "@mui/material";
-const gradients = [
-  "linear-gradient(135deg, #f6d365 0%, #fda085 100%)",
-  "linear-gradient(135deg, #a1c4fd 0%, #c2e9fb 100%)",
-  "linear-gradient(135deg, #fbc2eb 0%, #a6c1ee 100%)",
-  "linear-gradient(135deg, #fdcbf1 0%, #e6dee9 100%)",
-  "linear-gradient(135deg, #f093fb 0%, #f5576c 100%)",
-  "linear-gradient(135deg, #5ee7df 0%, #b490ca 100%)",
-  "linear-gradient(135deg, #c471f5 0%, #fa71cd 100%)",
-  "linear-gradient(135deg, #30cfd0 0%, #330867 100%)",
-  "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
-  "linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)",
-];
-const animalImages = [
-  "https://images.unsplash.com/photo-1518717758536-85ae29035b6d?auto=format&fit=facearea&w=256&h=256",
-  "https://images.unsplash.com/photo-1518715308788-3005759c61d4?auto=format&fit=facearea&w=256&h=256",
-  "https://images.unsplash.com/photo-1508672019048-805c876b67e2?auto=format&fit=facearea&w=256&h=256",
-  "https://images.unsplash.com/photo-1465101046530-73398c7f28ca?auto=format&fit=facearea&w=256&h=256",
-  "https://images.unsplash.com/photo-1518715308788-3005759c61d4?auto=format&fit=facearea&w=256&h=256",
-];
+import { Box, Grid, Typography } from "@mui/material";
+import { IconButton } from "@mui/material";
+import { MoreVert } from "@mui/icons-material";
 
-const images = Array.from({ length: 50 }, (_, i) => {
-  if (i % 3 === 0) {
-    return `https://randomuser.me/api/portraits/men/${(i % 25) + 1}.jpg`;
-  } else if (i % 3 === 1) {
-    return `https://randomuser.me/api/portraits/women/${(i % 25) + 1}.jpg`;
-  } else {
-    return animalImages[i % animalImages.length];
-  }
-});
-const colors = Array.from(
-  { length: 50 },
-  (_, i) => gradients[i % gradients.length]
-);
 const Explore = () => {
   return (
-    <Box
-      sx={{
-        mt: 4,
-        display: "flex",
-        justifyContent: "center",
-        alignItems: "center",
-        backgroundColor: "white",
-        width: "auto",
-        px: 2, // Add horizontal padding
-      }}
-    >
-      <Paper
-        elevation={0}
+    <>
+      <Grid
+        container
+        spacing={1}
         sx={{
-          p: 2,
+          mt: 4,
+          display: "flex",
+          flexWrap: "wrap",
+          alignItems: "center",
           justifyContent: "center",
-          borderRadius: 4,
-          backgroundColor: "white",
-          width: "100%",
-          maxWidth: "md", // Constrain maximum width
         }}
       >
-        <Box
-          sx={{
-            display: "grid",
-            gridTemplateColumns: {
-              xs: "repeat(2, 1fr)",
-              sm: "repeat(3, 1fr)",
-              md: "repeat(4, 1fr)",
-            },
-            justifyItems: "center",
-            alignItems: "center",
-            gap: 2,
-          }}
-        >
-          {colors.map((color, idx) => (
-            <Box
-              key={idx}
-              sx={{
-                width: "100%",
-                aspectRatio: "1/1", // Make square
-                borderRadius: 2,
-                overflow: "hidden",
-                position: "relative",
-                "&:hover": {
-                  transform: "scale(1.03)",
-                  transition: "transform 0.2s ease",
-                },
-                background: color, // Use gradient as fallback
-              }}
-            >
-              <Avatar
-                src={images[idx]}
-                variant="square"
-                alt={`Profile ${idx + 1}`}
+        {Array(11)
+          .fill(null)
+          .map((_, index) => (
+            <Grid item xs={6} key={index}>
+              <Box
                 sx={{
-                  width: "100%",
-                  height: "100%",
-                  objectFit: "cover",
-                  transition: "opacity 0.3s ease",
+                  minHeight: { xs: 170, sm: 250, md: 300 },
+                  aspectRatio: "1/1",
+                  backgroundColor: "rgba(0,0,0,0.05)",
+                  border: "1px solid #e0e0e0",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  position: "relative",
                   "&:hover": {
-                    opacity: 0.8,
+                    backgroundColor: "rgba(0,0,0,0.1)",
                   },
                 }}
-                referrerPolicy="no-referrer"
-              />
-            </Box>
+              >
+                <Typography variant="caption" color="text.secondary">
+                  {index + 1}
+                </Typography>
+                <IconButton
+                  sx={{
+                    position: "absolute",
+                    top: 4,
+                    right: 4,
+                    color: "black",
+                  }}
+                >
+                  <MoreVert fontSize="small" />
+                </IconButton>
+              </Box>
+            </Grid>
           ))}
-        </Box>
-      </Paper>
-    </Box>
+      </Grid>
+    </>
   );
 };
 export default Explore;

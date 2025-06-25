@@ -52,7 +52,6 @@ const Profile = () => {
   const user = useSelector((state) => state.user.user);
   const token = useSelector((state) => state.user.token);
 
-  if (!user || !token) return null;
   const [profileData, setProfileData] = useState(null);
   const fetchUser = async () => {
     try {
@@ -70,6 +69,7 @@ const Profile = () => {
   };
 
   useEffect(() => {
+    if (!user || !token) return;
     fetchUser();
   }, [user, token]);
 
@@ -83,14 +83,14 @@ const Profile = () => {
     navigate(`/connections/${profileData.user.username}`);
   };
 
-  if (!user || !profileData) return null;
+  if (!user || !profileData || !token) return null;
 
   const handleLogout = async () => {
     dispatch(clearUser());
     localStorage.removeItem("snapgram_user");
     navigate("/login");
   };
-  const userContent = Array(12).fill(null);
+  const userContent = Array(11).fill(null);
 
   return (
     <>
@@ -215,16 +215,16 @@ const Profile = () => {
         container
         spacing={1}
         sx={{
-          mt: 3,
+          mt: 1,
           display: "flex",
-          justifyContent: "center",
+          flexWrap: "wrap",
         }}
       >
         {userContent.map((_, index) => (
           <Grid item xs={12} sm={12} key={index}>
             <Box
               sx={{
-                minHeight: { xs: 180, sm: 250, md: 300 },
+                minHeight: { xs: 170, sm: 250, md: 300 },
                 borderRadius: 1,
                 aspectRatio: "1/1",
                 backgroundColor: "rgba(0,0,0,0.05)",

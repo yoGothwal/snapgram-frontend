@@ -27,12 +27,35 @@ import axios from "axios";
 
 import ImageMessage from "../components/ImageMessage";
 import AudioMessage from "../components/AudioMessage";
+import { useQuery } from "@tanstack/react-query";
 
 const baseURL = import.meta.env.VITE_API_URL || "/api";
 
 const UserChat = () => {
   const { username } = useParams();
   const currentUser = useSelector((state) => state.user.user?.username);
+  const token = useSelector((state) => state.user.token);
+  const fetchUser = async () => {
+    const res = await axios.get(`${baseURL}/api/users/${username}`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    return res.data;
+  };
+
+  const {
+    data: fetchedUser,
+    isLoading,
+    error,
+  } = useQuery({
+    queryKey: ["user", username],
+    queryFn: fetchUser,
+    enabled: !!username && !!token,
+  });
+
+  if (!currentUser && !fetchedUser) return null;
+  console.log(fetchedUser);
 
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState("");
@@ -309,12 +332,27 @@ const UserChat = () => {
           variant="dot"
           color="success"
         >
-          <Avatar
-            alt={username}
-            src={`https://i.pravatar.cc/150?u=${username}`}
-          />
+          {fetchedUser && (
+            <ImageMessage
+              imageUrl={
+                fetchedUser?.user.profilePicture ||
+                "https://i.pravatar.cc/150?u=${username}"
+              }
+            >
+              <Avatar
+                alt={username}
+                src={
+                  fetchedUser?.user.profilePicture ||
+                  "https://i.pravatar.cc/150?u=${username}"
+                }
+              />
+            </ImageMessage>
+          )}
         </Badge>
-        <Box sx={{ ml: 2, flexGrow: 1 }}>
+        <Box
+          onClick={() => navigate(`/${fetchedUser.user.username}`)}
+          sx={{ ml: 2, flexGrow: 1 }}
+        >
           <Typography variant="subtitle1" fontWeight="bold">
             {username}
           </Typography>
@@ -325,9 +363,9 @@ const UserChat = () => {
             {isConnected ? "online" : "connecting..."}
           </Typography>
         </Box>
-        <Box sx={{ p: 1, mr: 2 }}>
+        {/* <Box sx={{ p: 1, mr: 2 }}>
           <MoreVertIcon />
-        </Box>
+        </Box> */}
       </Paper>
 
       {/* Messages area */}
@@ -413,7 +451,7 @@ const UserChat = () => {
                           >
                             <ImageMessage imageUrl={message.imageUrl}>
                               <img
-                                src={imageUrl}
+                                src={message.imageUrl}
                                 alt="Click to enlarge"
                                 style={{
                                   maxWidth: "100%",
