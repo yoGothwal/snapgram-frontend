@@ -104,6 +104,15 @@ const EditProfile = () => {
             />
             <Button
               variant="outlined"
+              sx={{
+                borderColor: "black",
+                mt: 1,
+                color: "black",
+                "&:hover": {
+                  borderColor: "black",
+                  backgroundColor: "rgba(0,0,0,0.05)",
+                },
+              }}
               onClick={() => fileInputRef.current.click()}
               startIcon={<PhotoCamera />}
             >
@@ -131,7 +140,18 @@ const EditProfile = () => {
         />
 
         <Box sx={{ mt: 3, display: "flex", gap: 2 }}>
-          <Button variant="outlined" onClick={() => navigate(`/profile`)}>
+          <Button
+            variant="outlined"
+            sx={{
+              borderColor: "black",
+              color: "black",
+              "&:hover": {
+                borderColor: "black",
+                backgroundColor: "rgba(0,0,0,0.05)",
+              },
+            }}
+            onClick={() => navigate(`/profile`)}
+          >
             Cancel
           </Button>
           <Button

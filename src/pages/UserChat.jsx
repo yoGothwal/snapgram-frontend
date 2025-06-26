@@ -322,7 +322,7 @@ const UserChat = () => {
           zIndex: 10,
         }}
       >
-        <Box onClick={() => navigate(-1)} sx={{ mr: 1 }}>
+        <Box onClick={() => navigate(-1)} sx={{ mr: 1, cursor: "pointer" }}>
           <ArrowBackIcon />
         </Box>
         <Badge
@@ -350,7 +350,7 @@ const UserChat = () => {
         </Badge>
         <Box
           onClick={() => navigate(`/${fetchedUser.user.username}`)}
-          sx={{ ml: 2, flexGrow: 1 }}
+          sx={{ ml: 2, flexGrow: 1, cursor: "pointer" }}
         >
           <Typography variant="subtitle1" fontWeight="bold">
             {username}
@@ -371,7 +371,7 @@ const UserChat = () => {
       <Box
         sx={{
           flexGrow: 1,
-          mt: 6,
+          mt: 8,
           mb: 2,
           overflowY: "auto",
 
@@ -635,7 +635,16 @@ const UserChat = () => {
           )
         }
         {/* Bottom Icons */}
-        <Box sx={{ display: "flex", alignItems: "center", px: 1, mr: 1 }}>
+        <Box
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            px: 1,
+            mr: 1,
+            mb: 1,
+          }}
+        >
           <IconButton>
             <MoodIcon />
           </IconButton>
@@ -673,13 +682,13 @@ const UserChat = () => {
             fullWidth
             variant="outlined"
             placeholder="Type a message"
-            size="small"
             multiline
             maxRows={4}
             value={newMessage}
             onChange={(e) => setNewMessage(e.target.value)}
             onKeyPress={handleKeyPress}
             sx={{
+              maxWidth: "800px",
               mx: 1,
               "& .MuiOutlinedInput-root": {
                 borderRadius: "20px",

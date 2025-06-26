@@ -5,6 +5,7 @@ import {
   Paper,
   FormControl,
   TextField,
+  Divider,
 } from "@mui/material";
 import GoogleIcon from "@mui/icons-material/Google";
 import { useEffect, useState } from "react";
@@ -109,9 +110,11 @@ const SigninPage = ({ signIn }) => {
       justifyContent="center"
       alignItems="center"
       height="100vh"
+      sx={{ backgroundColor: "#f5f5f5" }} // Light gray background
     >
-      {isSubmitting && <LoadingAnimation></LoadingAnimation>}
-      {/*Logo*/}
+      {isSubmitting && <LoadingAnimation />}
+
+      {/* Logo Header */}
       <Box
         sx={{
           display: "flex",
@@ -128,7 +131,7 @@ const SigninPage = ({ signIn }) => {
         <Typography
           sx={{
             fontSize: "2rem",
-            color: "primary.main",
+            color: "black",
             letterSpacing: 2,
             fontStyle: "italic",
             fontWeight: "bold",
@@ -141,143 +144,173 @@ const SigninPage = ({ signIn }) => {
           SnapGram
         </Typography>
       </Box>
-      {/* <Typography
-        sx={{ textAlign: "center", fontSize: "1.5rem" }}
-        gutterBottom
-        color="primary.main"
+
+      {/* Form Container */}
+      <Paper
+        elevation={3}
+        sx={{
+          display: "flex",
+          flexDirection: "column",
+          p: 4,
+          gap: 3,
+          width: 320,
+          backgroundColor: "#fff",
+          borderRadius: "8px",
+        }}
       >
-        Sign In
-      </Typography> */}
+        {step === 0 && (
+          <>
+            <Typography variant="h6" sx={{ color: "#000", fontWeight: 500 }}>
+              Create your account
+            </Typography>
 
-      {step === 0 && (
-        <Paper
-          elevation={0}
-          sx={{
-            display: "flex",
-            flexDirection: "column",
-            padding: 2,
-            gap: 2,
-            width: 250,
-          }}
-        >
-          {usernameStatus !== null &&
-            formdata.username.length > 0 &&
-            step === 0 && (
+            {usernameStatus !== null && formdata.username.length > 0 && (
               <Typography
-                color={usernameStatus ? "success.main" : "error.main"}
-                sx={{ fontSize: "0.8rem", mt: -1 }}
+                sx={{
+                  fontSize: "0.75rem",
+                  color: usernameStatus ? "#4CAF50" : "#F44336",
+                }}
               >
-                {usernameStatus ? "✓ Username available" : "✗ Username taken"}
+                {usernameStatus ? "✓ Available" : "✗ Already taken"}
               </Typography>
             )}
-          <FormControl>
-            <TextField
-              label="username"
-              value={formdata.username}
-              id="username"
-              onChange={(e) =>
-                setFormdata((prev) => ({
-                  ...prev,
-                  username: e.target.value,
-                }))
-              }
-            ></TextField>
-          </FormControl>
 
-          <Button
-            variant="contained"
-            onClick={() => {
-              if (usernameStatus === false || formdata.username.length === 0) {
-                return;
-              }
-              setStep((prev) => prev + 1);
-            }}
-            sx={{ textTransform: "none", fontSize: "1rem", px: 3, py: 1.5 }}
-          >
-            Next
-          </Button>
-        </Paper>
-      )}
-      {step === 1 && (
-        <Paper
-          elevation={0}
-          sx={{
-            display: "flex",
-            flexDirection: "column",
-            padding: 2,
-            gap: 2,
-            width: 250,
-          }}
-        >
-          {passwordStatus !== null &&
-            formdata.password.length > 0 &&
-            step === 1 && (
-              <Typography
-                color={passwordStatus ? "success.main" : "error.main"}
-                sx={{ fontSize: "0.8rem", mt: -1 }}
-              >
-                {passwordStatus
-                  ? "✓ Strong password"
-                  : "✗ Password must be at least 6 characters long, contain an uppercase letter, a number, and a special character"}
-              </Typography>
-            )}
-          <FormControl>
-            <TextField
-              onChange={(e) =>
-                setFormdata((prev) => ({
-                  ...prev,
-                  password: e.target.value,
-                }))
-              }
-              value={formdata.password}
-              label="password"
-              type="password"
-              id="password"
-            ></TextField>
-          </FormControl>
-          <Box sx={{ display: "flex", gap: 2, justifyContent: "center" }}>
-            <Button
-              variant="outlined"
-              onClick={() => setStep((prev) => prev - 1)}
-              sx={{ textTransform: "none", fontSize: "1rem", px: 3, py: 1.5 }}
-            >
-              Prev
-            </Button>
-            <Button
-              onClick={() => {
-                if (
-                  passwordStatus === false ||
-                  formdata.password.length === 0
-                ) {
-                  return;
+            <FormControl fullWidth>
+              <TextField
+                label="Username"
+                variant="outlined"
+                size="small"
+                value={formdata.username}
+                onChange={(e) =>
+                  setFormdata({ ...formdata, username: e.target.value })
                 }
+                sx={{
+                  "& .MuiOutlinedInput-root": {
+                    "& fieldset": {
+                      borderColor: "#9e9e9e",
+                    },
+                    "&:hover fieldset": {
+                      borderColor: "#616161",
+                    },
+                  },
+                }}
+              />
+            </FormControl>
 
-                handleSubmit();
-              }}
+            <Button
               variant="contained"
-              sx={{ textTransform: "none", fontSize: "1rem", px: 3, py: 1.5 }}
+              disabled={usernameStatus !== true}
+              onClick={() => setStep(1)}
+              sx={{
+                backgroundColor: "#000",
+                color: "#fff",
+                "&:hover": {
+                  backgroundColor: "#424242",
+                },
+                py: 1.5,
+                textTransform: "none",
+              }}
             >
-              Submit
+              Continue
             </Button>
-          </Box>
-        </Paper>
-      )}
+          </>
+        )}
 
-      {step < 2 && (
-        <>
-          <Typography gutterBottom mb={2}>
-            Or
-          </Typography>
-          <Button
-            variant="outlined"
-            startIcon={<GoogleIcon />}
-            onClick={signIn}
-            sx={{ textTransform: "none", fontSize: "1rem", px: 3, py: 1.5 }}
-          >
-            Sign in with Google
-          </Button>
-        </>
-      )}
+        {step === 1 && (
+          <>
+            <Typography variant="h6" sx={{ color: "#000", fontWeight: 500 }}>
+              Create a password
+            </Typography>
+
+            {passwordStatus !== null && formdata.password.length > 0 && (
+              <Typography
+                sx={{
+                  fontSize: "0.75rem",
+                  color: passwordStatus ? "#4CAF50" : "#F44336",
+                }}
+              >
+                {passwordStatus ? "✓ Strong password" : "✗ Weak password"}
+              </Typography>
+            )}
+
+            <FormControl fullWidth>
+              <TextField
+                label="Password"
+                type="password"
+                variant="outlined"
+                size="small"
+                value={formdata.password}
+                onChange={(e) =>
+                  setFormdata({ ...formdata, password: e.target.value })
+                }
+                sx={{
+                  "& .MuiOutlinedInput-root": {
+                    "& fieldset": {
+                      borderColor: "#9e9e9e",
+                    },
+                    "&:hover fieldset": {
+                      borderColor: "#616161",
+                    },
+                  },
+                }}
+              />
+            </FormControl>
+
+            <Box sx={{ display: "flex", gap: 2 }}>
+              <Button
+                variant="outlined"
+                onClick={() => setStep(0)}
+                sx={{
+                  borderColor: "#9e9e9e",
+                  color: "#000",
+                  flex: 1,
+                  textTransform: "none",
+                  "&:hover": {
+                    borderColor: "#616161",
+                  },
+                }}
+              >
+                Back
+              </Button>
+              <Button
+                variant="contained"
+                disabled={passwordStatus !== true}
+                onClick={handleSubmit}
+                sx={{
+                  backgroundColor: "#000",
+                  color: "#fff",
+                  flex: 1,
+                  "&:hover": {
+                    backgroundColor: "#424242",
+                  },
+                  textTransform: "none",
+                }}
+              >
+                Sign Up
+              </Button>
+            </Box>
+          </>
+        )}
+
+        <Divider sx={{ my: 1, borderColor: "#e0e0e0" }} />
+
+        <Button
+          variant="outlined"
+          startIcon={<GoogleIcon />}
+          onClick={signIn}
+          sx={{
+            borderColor: "#9e9e9e",
+            color: "#000",
+            textTransform: "none",
+            "&:hover": {
+              borderColor: "#616161",
+              backgroundColor: "rgba(0,0,0,0.04)",
+            },
+          }}
+        >
+          Continue with Google
+        </Button>
+      </Paper>
     </Box>
   );
 };

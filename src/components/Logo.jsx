@@ -52,6 +52,7 @@ const Content = ({ notifications }) => {
         justifyContent: "space-between",
         backgroundColor: "white",
         zIndex: 1300,
+        cursor: "pointer",
       }}
     >
       <Typography
@@ -70,7 +71,7 @@ const Content = ({ notifications }) => {
         SnapGram
       </Typography>
       <Box mx={2} my={1} sx={{ display: "flex", gap: 1 }}>
-        <MessageIcon onClick={openChat} sx={{ fontSize: 25 }}></MessageIcon>
+        {/* <MessageIcon onClick={openChat} sx={{ fontSize: 25 ,}}></MessageIcon> */}
         <Box onClick={handleNotificationIconClick}>
           <NotificationsIcon sx={{ fontSize: 25 }}></NotificationsIcon>
         </Box>

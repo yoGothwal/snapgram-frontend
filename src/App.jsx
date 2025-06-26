@@ -12,6 +12,7 @@ import { useEffect } from "react";
 import Layout from "./components/Layout";
 import Navbar from "./components/NavBar";
 import ProfileEditForm from "./components/ProfileEditForm";
+import ProfilePostForm from "./components/ProfilePostForm";
 
 import Profile from "./pages/Profile";
 import UserProfile from "./pages/UserProfile";
@@ -191,6 +192,14 @@ function AppContent() {
           element={
             <>
               <ProfileEditForm />
+            </>
+          }
+        />
+        <Route
+          path="/profile/create"
+          element={
+            <>
+              <ProfilePostForm />
             </>
           }
         />

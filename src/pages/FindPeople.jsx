@@ -44,7 +44,6 @@ const FindPeople = () => {
   const [gpsOn, setGpsOn] = useState(false);
   const [radius, setRadius] = useState(10);
   const debouncedRadius = useDebounce(radius, 500);
-  console.log(user);
   const dispatch = useDispatch();
 
   const [searchQuery, setSearchQuery] = useState("");
@@ -99,7 +98,6 @@ const FindPeople = () => {
       async (position) => {
         const lat = position.coords.latitude;
         const lng = position.coords.longitude;
-        console.log(lat, lng);
         try {
           await axios.put(
             `${baseURL}/api/users/update-location`,
@@ -131,7 +129,6 @@ const FindPeople = () => {
     }
   }, [gpsOn]);
   const handlePersonClick = (u) => {
-    console.log("clicked");
     navigate(`/${u.username}`);
   };
 
@@ -152,6 +149,7 @@ const FindPeople = () => {
         display: "flex",
         justifyContent: "center",
         alignItems: "flex-start",
+        mb: 12,
       }}
     >
       <Paper
@@ -223,8 +221,9 @@ const FindPeople = () => {
               backgroundColor: "#fafafa",
             }}
           >
+            <Typography>Comming Soon</Typography>
             {/* GPS Section */}
-            <Box
+            {/* <Box
               sx={{
                 width: "100%",
                 display: "flex",
@@ -278,8 +277,8 @@ const FindPeople = () => {
                   )}
                 </IconButton>
               </Box>
-            </Box>
-            <Box sx={{ width: "100%", px: 2 }}>
+            </Box> */}
+            {/* <Box sx={{ width: "100%", px: 2 }}>
               <Typography
                 variant="subtitle2"
                 sx={{ fontWeight: 500, color: "#555", mb: 1 }}
@@ -287,7 +286,7 @@ const FindPeople = () => {
                 Search Radius: {radius} km
               </Typography>
               <LocationSlider setRadius={setRadius} />
-            </Box>
+            </Box> */}
           </Box>
         </Collapse>
 

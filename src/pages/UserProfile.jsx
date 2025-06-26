@@ -9,15 +9,17 @@ import {
   Alert,
   Grid,
   Divider,
-  IconButton,
+  Card,
+  CardContent,
 } from "@mui/material";
 import { useEffect, useState } from "react";
 import axios from "axios";
 import { useDispatch, useSelector } from "react-redux";
-import { MoreVert } from "@mui/icons-material";
 import { setFollowings } from "../features/connectionSlice";
 import ImageMessage from "../components/ImageMessage";
-
+import FavoriteBorderIcon from "@mui/icons-material/FavoriteBorder";
+import FavoriteIcon from "@mui/icons-material/Favorite";
+import { IconButton } from "@mui/material";
 const baseURL = import.meta.env.VITE_API_URL || "/api";
 
 const ProfileCard = ({ children }) => {
@@ -52,6 +54,7 @@ const StatItem = ({ value, label, onClick }) => {
 const UserProfile = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const [expandedCaptions, setExpandedCaptions] = useState({});
 
   const user = useSelector((state) => state.user.user);
   const token = useSelector((state) => state.user.token);
@@ -68,6 +71,21 @@ const UserProfile = () => {
   });
 
   const { username } = useParams();
+  const [posts, setPosts] = useState([]);
+  const [likedPosts, setLikedPosts] = useState([]);
+  const fetchPosts = async () => {
+    try {
+      const res = await axios.get(`${baseURL}/api/posts/${username}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      console.log("Fetched posts", res.data);
+      setPosts(res.data);
+    } catch (error) {
+      console.error("Error fetching  posts:", error);
+    }
+  };
   const fetchUser = async () => {
     try {
       const res = await axios.get(`${baseURL}/api/users/${username}`, {
@@ -86,14 +104,71 @@ const UserProfile = () => {
     }
   };
 
-  useEffect(() => {
-    if (user) {
-      fetchUser();
+  const fetchLikedPosts = async () => {
+    try {
+      const res = await axios.get(`${baseURL}/api/likes/${user._id}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      console.log("liked posts:", res.data);
+      setLikedPosts(res.data);
+    } catch (error) {
+      console.error("error fetching liked posts: ", error);
     }
-  }, []);
+  };
 
+  useEffect(() => {
+    if (!user || !token) return;
+    fetchUser();
+    fetchPosts();
+    fetchLikedPosts();
+  }, [user, token]);
+  const increaseLike = async (postId) => {
+    const body = {
+      userId: user._id,
+      postId,
+    };
+    try {
+      const res = await axios.post(`${baseURL}/api/likes`, body, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      setLikedPosts((prev) => [...prev, postId]);
+      setPosts((prev) =>
+        prev.map((p) =>
+          p._id === postId ? { ...p, likesCount: p.likesCount + 1 } : p
+        )
+      );
+      console.log(res.data);
+    } catch (error) {
+      console.error("Error:", error);
+    }
+  };
+  const decreaseLike = async (postId) => {
+    try {
+      const res = await axios.delete(`${baseURL}/api/likes`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        data: {
+          userId: user._id,
+          postId,
+        },
+      });
+      setLikedPosts((prev) => prev.filter((id) => id !== postId));
+      setPosts((prev) =>
+        prev.map((p) =>
+          p._id === postId ? { ...p, likesCount: p.likesCount - 1 } : p
+        )
+      );
+      console.log(res.data);
+    } catch (error) {
+      console.error("Error:", error);
+    }
+  };
   if (!user || !fetchedUser) return null;
-  console.log("DP URL:", fetchedUser.user.profilePicture);
 
   const handleFollow = async () => {
     try {
@@ -171,11 +246,10 @@ const UserProfile = () => {
   const handleChatClick = () => {
     navigate(`/chat/${fetchedUser.user.username}`);
   };
-  const userContent = Array(9).fill(null);
 
   return (
     <>
-      <Box sx={{ maxWidth: "800px", mx: "auto", p: 2, mt: 2 }}>
+      <Box sx={{ maxWidth: "800px", mx: "auto", p: 1, mt: 2 }}>
         {/* Profile Info */}
         <ProfileCard>
           {/* Profile Picture and User Info Section */}
@@ -272,7 +346,6 @@ const UserProfile = () => {
           sx={{
             display: "flex",
             justifyContent: "center",
-
             gap: 2,
           }}
         >
@@ -312,8 +385,6 @@ const UserProfile = () => {
                 backgroundColor: "black",
                 color: "white",
                 "&:hover": { backgroundColor: "#333" },
-                width: "100%",
-                maxWidth: 400,
               }}
             >
               FOLLOW
@@ -323,7 +394,7 @@ const UserProfile = () => {
 
         <Snackbar
           open={notification.open}
-          autoHideDuration={3000}
+          autoHideDuration={2000}
           onClose={() => setNotification({ ...notification, open: false })}
           sx={{
             position: "fixed",
@@ -332,6 +403,10 @@ const UserProfile = () => {
             transform: "translate(-50%, -50%)",
             zIndex: 1400, // above modals
             backgroundColor: "transparent",
+          }}
+          anchorOrigin={{
+            vertical: "top",
+            horizontal: "center",
           }}
         >
           <Alert
@@ -348,44 +423,142 @@ const UserProfile = () => {
       {/* Content Grid */}
       <Grid
         container
-        spacing={2}
+        spacing={1}
         sx={{
           mt: 1,
+          mb: 10,
           display: "flex",
           flexWrap: "wrap",
+          justifyContent: "center",
         }}
       >
-        {userContent.map((_, index) => (
-          <Grid item xs={6} key={index}>
-            <Box
+        {posts?.map((post) => (
+          <Grid item xs={6} sm={12} key={post._id}>
+            <Card
+              elevation={0}
               sx={{
-                minHeight: { xs: 170, sm: 250, md: 300 },
-                aspectRatio: "1/1",
-                backgroundColor: "rgba(0,0,0,0.05)",
-                border: "1px solid #e0e0e0",
+                maxWidth: 350,
+                borderRadius: 0,
+                backgroundColor: "#fafafa",
+                overflow: "hidden",
                 display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                position: "relative",
-                "&:hover": {
-                  backgroundColor: "rgba(0,0,0,0.1)",
-                },
+                flexDirection: "column",
               }}
             >
-              <Typography variant="caption" color="text.secondary">
-                {index + 1}
-              </Typography>
-              <IconButton
-                sx={{
-                  position: "absolute",
-                  top: 4,
-                  right: 4,
-                  color: "black",
-                }}
-              >
-                <MoreVert fontSize="small" />
-              </IconButton>
-            </Box>
+              {/* Image */}
+              <ImageMessage imageUrl={post.image}>
+                <Box
+                  sx={{
+                    width: "100%",
+                    aspectRatio: "1 / 1",
+                    overflow: "hidden",
+                    position: "relative",
+                  }}
+                >
+                  <img
+                    src={post.image}
+                    alt="Post content"
+                    style={{
+                      width: "100%",
+                      height: "100%",
+                      objectFit: "cover",
+                      display: "block",
+                    }}
+                  />
+                </Box>
+              </ImageMessage>
+
+              {/* Caption and Likes */}
+              <CardContent sx={{ p: 1.5 }}>
+                <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                  <IconButton
+                    size="small"
+                    onClick={() =>
+                      likedPosts?.includes(post._id)
+                        ? decreaseLike(post._id)
+                        : increaseLike(post._id)
+                    }
+                  >
+                    {likedPosts?.includes(post._id) ? (
+                      <FavoriteIcon sx={{ color: "red" }} />
+                    ) : (
+                      <FavoriteBorderIcon />
+                    )}
+                  </IconButton>
+                  <Typography variant="body2">
+                    {post.likesCount} {post.likesCount === 1 ? "like" : "likes"}
+                  </Typography>
+                </Box>
+
+                {post.caption && (
+                  <Box sx={{ display: "flex", flexWrap: "wrap" }}>
+                    <Typography
+                      variant="caption"
+                      sx={{
+                        color: "#333",
+
+                        wordBreak: "break-word",
+                        whiteSpace: "pre-wrap",
+                        display: "-webkit-box",
+                        WebkitBoxOrient: "vertical",
+                        overflow: "hidden",
+                        WebkitLineClamp: expandedCaptions[post._id]
+                          ? undefined
+                          : 1,
+                        flex: 1,
+                        minWidth: 0, // Prevents overflow
+                      }}
+                    >
+                      {post.caption}
+                    </Typography>
+                    {post.caption.length > 50 && (
+                      <Typography
+                        component="span"
+                        variant="caption"
+                        sx={{
+                          color: "grey",
+                          cursor: "pointer",
+                          fontWeight: 500,
+                          whiteSpace: "nowrap",
+                          alignSelf: "flex-end",
+
+                          ml: 0.5,
+                        }}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setExpandedCaptions((prev) => ({
+                            ...prev,
+                            [post._id]: !prev[post._id],
+                          }));
+                        }}
+                      >
+                        {expandedCaptions[post._id] ? "less" : "more"}
+                      </Typography>
+                    )}
+                  </Box>
+                )}
+                <Typography
+                  variant="caption"
+                  component="div"
+                  sx={{
+                    alignSelf: "flex-end",
+                    color: "text.secondary",
+                    fontSize: "0.75rem",
+                    mt: 0.5,
+                    letterSpacing: 0.1,
+                    whiteSpace: "nowrap", // Prevents line breaks
+                  }}
+                >
+                  {new Date(post.createdAt).toLocaleString("en-US", {
+                    month: "short",
+                    day: "numeric",
+                    hour: "2-digit",
+                    minute: "2-digit",
+                    hour12: true,
+                  })}
+                </Typography>
+              </CardContent>
+            </Card>
           </Grid>
         ))}
       </Grid>
