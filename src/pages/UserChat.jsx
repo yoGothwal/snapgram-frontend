@@ -186,7 +186,6 @@ const UserChat = () => {
         headers: {
           "Content-Type": "multipart/form-data",
         },
-        withCredentials: true,
         onUploadProgress: (event) => {
           const percent = Math.floor((event.loaded / event.total) * 100);
           console.log(`${percent}% audio uploaded`);
