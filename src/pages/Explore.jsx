@@ -1,28 +1,75 @@
 import {
   Box,
-  Grid,
+  Avatar,
   Typography,
+  Button,
+  Grid,
+  IconButton,
   Card,
   CardContent,
-  IconButton,
-  Avatar,
+  Drawer,
+  TextField,
 } from "@mui/material";
+
 import ImageMessage from "../components/ImageMessage";
+
 import FavoriteBorderIcon from "@mui/icons-material/FavoriteBorder";
 import FavoriteIcon from "@mui/icons-material/Favorite";
+import ArrowUpwardOutlinedIcon from "@mui/icons-material/ArrowUpwardOutlined";
+import ExpandMoreOutlinedIcon from "@mui/icons-material/ExpandMoreOutlined";
+import ModeCommentOutlinedIcon from "@mui/icons-material/ModeCommentOutlined";
+
 import { useSelector } from "react-redux";
 import { useState, useEffect } from "react";
-import axios from "axios";
 import { useNavigate } from "react-router-dom";
+
+import axios from "axios";
 const baseURL = import.meta.env.VITE_API_URL || "/api";
 
 const Explore = () => {
+  const navigate = useNavigate();
+
   const user = useSelector((state) => state.user.user);
   const token = useSelector((state) => state.user.token);
+
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const [selectedPost, setSelectedPost] = useState(null);
   const [expandedCaptions, setExpandedCaptions] = useState({});
-  const navigate = useNavigate();
+
   const [posts, setPosts] = useState([]);
   const [likedPosts, setLikedPosts] = useState([]);
+
+  const [comments, setComments] = useState([]);
+  const [comment, setComment] = useState("");
+
+  const postComment = async () => {
+    if (comment.trim() === "") return;
+    const res = await axios.post(
+      `${baseURL}/api/comments/`,
+      { userId: user._id, postId: selectedPost, comment },
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+    console.log(res.data);
+    setComment("");
+    fetchComments(selectedPost);
+  };
+  const fetchComments = async (postId) => {
+    try {
+      const res = await axios.get(`${baseURL}/api/comments/${postId}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      setComments(res.data);
+      console.log("fetched comments:", res.data);
+    } catch (error) {
+      console.log("error in fetching comments:", error);
+    }
+  };
   const increaseLike = async (postId) => {
     const body = {
       userId: user._id,
@@ -183,7 +230,7 @@ const Explore = () => {
 
               {/* Caption and Likes */}
               <CardContent sx={{ p: 1.5 }}>
-                <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                <Box sx={{ display: "flex", alignItems: "center" }}>
                   <IconButton
                     size="small"
                     onClick={() =>
@@ -199,8 +246,133 @@ const Explore = () => {
                     )}
                   </IconButton>
                   <Typography variant="body2">
-                    {post.likesCount} {post.likesCount === 1 ? "like" : "likes"}
+                    {post.likesCount || ""}
                   </Typography>
+                  <IconButton
+                    size="small"
+                    sx={{ mt: 0.3, ml: 1 }}
+                    onClick={() => {
+                      setDrawerOpen(true);
+                      setSelectedPost(post._id);
+                      fetchComments(post._id);
+                    }}
+                  >
+                    <ModeCommentOutlinedIcon></ModeCommentOutlinedIcon>
+                  </IconButton>
+                  <Typography variant="body2">
+                    {post.commentsCount || ""}
+                  </Typography>
+                  {/*drawer */}
+                  <Drawer
+                    anchor="bottom"
+                    open={drawerOpen}
+                    onClose={() => {
+                      setDrawerOpen(false);
+                      setSelectedPost(null);
+                    }}
+                    PaperProps={{
+                      sx: {
+                        borderTopLeftRadius: 16,
+                        borderTopRightRadius: 16,
+                      },
+                    }}
+                  >
+                    <Box
+                      p={2}
+                      sx={{
+                        height: "90vh",
+                        overflowY: "auto",
+                      }}
+                    >
+                      <Box
+                        sx={{
+                          display: "flex",
+                          justifyContent: "center",
+                          mb: 1,
+                        }}
+                      >
+                        <ExpandMoreOutlinedIcon
+                          sx={{ cursor: "pointer" }}
+                          onClick={() => {
+                            setSelectedPost(null);
+                            setDrawerOpen(false);
+                          }}
+                        />
+                      </Box>
+                      {/* Comments list here */}
+                      {comments?.map((comment) => (
+                        <Box
+                          key={comment._id}
+                          sx={{
+                            display: "flex",
+                            alignItems: "flex-start",
+                            gap: 1.5,
+                            mb: 2,
+                          }}
+                        >
+                          <Avatar
+                            src={comment.user.profilePicture}
+                            sx={{ width: 32, height: 32 }}
+                          />
+                          <Box>
+                            <Typography
+                              variant="caption"
+                              sx={{ fontWeight: 600 }}
+                            >
+                              {comment.user.username}
+                            </Typography>
+                            <Typography
+                              variant="body2"
+                              sx={{ whiteSpace: "pre-wrap" }}
+                            >
+                              {comment.content}
+                            </Typography>
+                          </Box>
+                        </Box>
+                      ))}
+
+                      <Box></Box>
+                      <Box
+                        mt={2}
+                        sx={{
+                          display: "flex",
+                          position: "fixed",
+                          bottom: "80px",
+                          left: 0,
+                          right: 0,
+                          gap: 1,
+                          justifyContent: "center",
+                          px: 2, // optional padding
+                        }}
+                      >
+                        <TextField
+                          fullWidth
+                          value={comment}
+                          onChange={(event) => setComment(event.target.value)}
+                          variant="outlined"
+                          size="small"
+                          placeholder="😊 Add a comment..."
+                          sx={{
+                            "& .MuiOutlinedInput-root": {
+                              borderRadius: 4,
+                            },
+                          }}
+                        />
+
+                        <Button
+                          onClick={postComment}
+                          sx={{
+                            backgroundColor: "black",
+                            color: "white",
+                            height: 40,
+                            borderRadius: 4,
+                          }}
+                        >
+                          <ArrowUpwardOutlinedIcon></ArrowUpwardOutlinedIcon>
+                        </Button>
+                      </Box>
+                    </Box>
+                  </Drawer>
                 </Box>
 
                 {post.caption && (
